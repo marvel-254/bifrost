@@ -16,6 +16,8 @@ const nextConfig = {
     '@bifrost/providers',
     '@bifrost/routing',
     '@bifrost/shared',
+    '@bifrost/compression',
+    '@bifrost/cache',
   ],
   webpack: (config) => {
     config.resolve.alias = {
@@ -24,6 +26,8 @@ const nextConfig = {
       '@bifrost/models': path.join(root, 'packages/models/src'),
       '@bifrost/providers': path.join(root, 'packages/providers/src'),
       '@bifrost/routing': path.join(root, 'packages/router/src'),
+      '@bifrost/compression': path.join(root, 'packages/compression/src'),
+      '@bifrost/cache': path.join(root, 'packages/cache/src'),
     };
     return config;
   },

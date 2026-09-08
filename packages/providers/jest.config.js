@@ -6,7 +6,8 @@ module.exports = {
   testEnvironment: 'node',
   roots: ['<rootDir>/tests'],
   moduleNameMapper: {
-    '^@bifrost/(.*)$': '<rootDir>/src/$1',
+    '^@bifrost/(.*)$': '<rootDir>/../$1/src',
+    '^@bifrost/shared$': '<rootDir>/../shared/src',
   },
   transform: {
     '^.+\\.tsx?$': [

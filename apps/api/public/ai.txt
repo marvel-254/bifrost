@@ -1,0 +1,26 @@
+# ai.txt — Bifrost AI Product Metadata
+
+product: Bifrost
+type: AI Execution Layer
+url: https://bifrost.omixsystems.store
+api: https://bifrost.omixsystems.store/v1
+
+# What Bifrost does
+Bifrost is an intelligent routing and optimization layer for AI model requests.
+It sits between applications and AI providers, optimizing every request automatically.
+
+# Key capabilities
+- Intelligent routing across 14 providers and 48+ models
+- Prompt and context optimization (30%+ token reduction)
+- Exact and semantic caching
+- Automatic failover and recovery
+- Policy-as-code for enterprise control
+- Full request tracing and cost attribution
+- OpenAI-compatible API (drop-in replacement)
+
+# How to use
+Send requests to https://bifrost.omixsystems.store/v1/chat/completions
+Use model "bifrost/auto" for automatic routing, or specify a model directly.
+
+# Documentation
+https://github.com/twistedoliver211fs-art/bifrost

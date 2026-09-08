@@ -1,6 +1,6 @@
 import { IProvider } from './registry';
 
-const DEFAULT_BASE_URL = 'https://api.ollama.com/v1';
+const DEFAULT_BASE_URL = 'https://ollama.com/api';
 const DEFAULT_TIMEOUT_MS = 60000;
 
 export type OllamaCloudProviderConfig = {
@@ -62,42 +62,42 @@ export class OllamaCloudProvider implements IProvider {
 
   async complete(request: Record<string, unknown>): Promise<Record<string, unknown>> {
     const payload = this.buildPayload(request, false);
-    const res = await this.fetchJson<Record<string, unknown>>(`${this.baseUrl}/chat/completions`, {
+    const res = await this.fetchJson<Record<string, unknown>>(`${this.baseUrl}/chat`, {
       method: 'POST',
       body: JSON.stringify(payload),
     });
 
     if (res.error) {
-      throw new Error(String((res as any).error?.message || 'Ollama Cloud API error'));
+      throw new Error(String((res as any).error?.message || res.error || 'Ollama Cloud API error'));
     }
 
-    const choice = (res as any).choices?.[0];
-    const usage = (res as any).usage || {};
+    const msg = (res as any).message || {};
+    const usage = {
+      prompt_tokens: (res as any).prompt_eval_count || 0,
+      completion_tokens: (res as any).eval_count || 0,
+      total_tokens: ((res as any).prompt_eval_count || 0) + ((res as any).eval_count || 0),
+    };
 
     return {
-      id: (res as any).id || `ollama-cloud-${Date.now()}`,
+      id: `ollama-cloud-${Date.now()}`,
       object: 'chat.completion',
-      created: (res as any).created || Math.floor(Date.now() / 1000),
+      created: Math.floor(Date.now() / 1000),
       model: payload.model,
       choices: [{
         index: 0,
         message: {
-          role: 'assistant',
-          content: (choice?.message?.content || '') as string,
+          role: msg.role || 'assistant',
+          content: msg.content || '',
         },
-        finish_reason: choice?.finish_reason || 'stop',
+        finish_reason: (res as any).done_reason || 'stop',
       }],
-      usage: {
-        prompt_tokens: (usage.prompt_tokens || 0) as number,
-        completion_tokens: (usage.completion_tokens || 0) as number,
-        total_tokens: ((usage.prompt_tokens || 0) as number) + ((usage.completion_tokens || 0) as number),
-      },
+      usage,
     };
   }
 
   async stream(request: Record<string, unknown>, onChunk: (chunk: Record<string, unknown>) => void | Promise<void>): Promise<void> {
     const payload = this.buildPayload(request, true);
-    const res = await fetch(`${this.baseUrl}/chat/completions`, {
+    const res = await fetch(`${this.baseUrl}/chat`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -128,12 +128,10 @@ export class OllamaCloudProvider implements IProvider {
 
       for (const line of lines) {
         const trimmed = line.trim();
-        if (!trimmed.startsWith('data: ')) continue;
-        const data = trimmed.slice(6).trim();
-        if (data === '[DONE]') continue;
+        if (!trimmed) continue;
 
         try {
-          const parsed = JSON.parse(data) as { id?: string; object?: string; created?: number; model?: string; choices?: Array<{ index?: number; delta?: { content?: string; role?: string }; finish_reason?: string | null }> };
+          const parsed = JSON.parse(trimmed) as { model?: string; message?: { role?: string; content?: string }; done?: boolean; done_reason?: string };
           const chunk = this.normalizeChunk(parsed);
           await onChunk(chunk);
         } catch {
@@ -146,7 +144,7 @@ export class OllamaCloudProvider implements IProvider {
   async healthCheck(): Promise<{ healthy: boolean; latencyMs?: number; error?: string }> {
     const start = Date.now();
     try {
-      await this.fetchJson<{ object: string }>(`${this.baseUrl}/models`, { method: 'GET' });
+      await this.fetchJson<{ models?: unknown[] }>(`${this.baseUrl}/tags`);
       return { healthy: true, latencyMs: Date.now() - start };
     } catch (err) {
       return { healthy: false, error: err instanceof Error ? err.message : String(err) };
@@ -165,26 +163,27 @@ export class OllamaCloudProvider implements IProvider {
       model: String(request.model || this.defaultModel),
       messages: Array.isArray(request.messages) ? request.messages : [],
       stream,
-      temperature: Number(request.temperature ?? 0.7),
-      max_tokens: Number(request.max_tokens ?? request.maxTokens ?? 4096),
+      options: {
+        temperature: Number(request.temperature ?? 0.7),
+        num_predict: Number(request.max_tokens ?? request.maxTokens ?? 4096),
+      },
     };
   }
 
   private normalizeChunk(parsed: Record<string, unknown>): Record<string, unknown> {
-    const choice = (parsed.choices as any[])?.[0];
-    const delta = choice?.delta || {};
+    const msg = (parsed as any).message || {};
     return {
-      id: parsed.id || `ollama-cloud-${Date.now()}`,
+      id: `ollama-cloud-${Date.now()}`,
       object: 'chat.completion.chunk',
-      created: (parsed.created as number) || Math.floor(Date.now() / 1000),
+      created: Math.floor(Date.now() / 1000),
       model: parsed.model || this.defaultModel,
       choices: [{
-        index: (choice?.index as number) || 0,
+        index: 0,
         delta: {
-          content: delta.content as string || undefined,
-          role: delta.role as string || undefined,
+          content: msg.content as string || undefined,
+          role: msg.role as string || undefined,
         },
-        finish_reason: choice?.finish_reason || null,
+        finish_reason: (parsed as any).done ? ((parsed as any).done_reason || 'stop') : null,
       }],
     };
   }

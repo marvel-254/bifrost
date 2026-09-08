@@ -1,0 +1,110 @@
+/**
+ * Provider factory that creates provider instances with key rotation.
+ * Reads keys from the database and creates a rotator per provider.
+ */
+
+import { KeyRotator, type RotatableKey, type RotationStrategy } from './key-rotation';
+import { getProviderKeys } from '@bifrost/shared';
+import { createGeminiProvider } from './gemini';
+import { createGroqProvider } from './groq';
+import { createCerebrasProvider } from './cerebras';
+import { createSambaNovaProvider } from './sambanova';
+import { createOpenRouterProvider } from './openrouter';
+import { createCloudflareProvider } from './cloudflare';
+import { createMistralProvider } from './mistral';
+import { createHuggingFaceProvider } from './huggingface';
+import { createVercelGatewayProvider } from './vercel-gateway';
+import { createOpenAiProvider } from './openai';
+import type { IProvider } from './registry';
+
+export interface ProviderWithRotation {
+  provider: IProvider;
+  rotator: KeyRotator;
+  providerName: string;
+  activeKey: RotatableKey;
+}
+
+const rotatorCache = new Map<string, ProviderWithRotation>();
+
+export async function createProviderWithRotation(
+  providerName: string,
+  config?: Record<string, unknown>
+): Promise<ProviderWithRotation | null> {
+  const cached = rotatorCache.get(providerName);
+  if (cached) {
+    const key = cached.rotator.getNextKey();
+    if (key) {
+      return { ...cached, activeKey: key, provider: createProviderInstance(providerName, key.apiKey, config) };
+    }
+    return null;
+  }
+
+  const keys = await getProviderKeys(providerName);
+  if (keys.length === 0) return null;
+
+  const rotator = new KeyRotator({ strategy: 'priority' });
+  const rotatableKeys: RotatableKey[] = keys.map(k => ({
+    id: k.id,
+    apiKey: k.api_key,
+    label: k.label,
+    priority: k.priority,
+    enabled: k.enabled,
+    successCount: k.success_count,
+    errorCount: k.error_count,
+    avgLatencyMs: k.avg_latency_ms,
+    lastUsedAt: k.last_used_at,
+  }));
+  rotator.setKeys(rotatableKeys);
+
+  const key = rotator.getNextKey();
+  if (!key) return null;
+
+  const provider = createProviderInstance(providerName, key.apiKey, config);
+
+  const result: ProviderWithRotation = { provider, rotator, providerName, activeKey: key };
+  rotatorCache.set(providerName, result);
+  return result;
+}
+
+function createProviderInstance(name: string, apiKey: string, config?: Record<string, unknown>): IProvider {
+  const timeoutMs = Number(config?.timeoutMs ?? 60000);
+  const baseUrl = config?.baseUrl as string | undefined;
+  const defaultModel = config?.defaultModel as string | undefined;
+
+  switch (name) {
+    case 'gemini':
+      return createGeminiProvider({ apiKey, defaultModel, timeoutMs });
+    case 'groq':
+      return createGroqProvider({ apiKey, defaultModel, timeoutMs });
+    case 'cerebras':
+      return createCerebrasProvider({ apiKey, defaultModel, timeoutMs });
+    case 'sambanova':
+      return createSambaNovaProvider({ apiKey, defaultModel, timeoutMs });
+    case 'openrouter':
+      return createOpenRouterProvider({ apiKey, defaultModel, timeoutMs });
+    case 'cloudflare':
+      return createCloudflareProvider({ apiKey, defaultModel, accountId: config?.accountId as string, timeoutMs });
+    case 'mistral':
+      return createMistralProvider({ apiKey, defaultModel, timeoutMs });
+    case 'huggingface':
+      return createHuggingFaceProvider({ apiKey, defaultModel, timeoutMs });
+    case 'vercel-gateway':
+      return createVercelGatewayProvider({ apiKey, defaultModel, timeoutMs });
+    case 'openai':
+      return createOpenAiProvider({ apiKey, baseUrl, defaultModel, timeoutMs });
+    default:
+      throw new Error(`Unknown provider: ${name}`);
+  }
+}
+
+export function clearRotatorCache(): void {
+  rotatorCache.clear();
+}
+
+export function getRotatorCache(): Map<string, ProviderWithRotation> {
+  return rotatorCache;
+}
+
+export function invalidateProviderCache(providerName: string): void {
+  rotatorCache.delete(providerName);
+}

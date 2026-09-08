@@ -1,0 +1,11 @@
+# humans.txt
+
+team: OMIX Digital Solutions
+role: Builder & Operator
+location: Kericho, Kenya
+url: https://omixsystems.store
+contact: omixsystems@gmail.com
+
+product: Bifrost
+description: Intelligent AI execution layer
+built: 2026

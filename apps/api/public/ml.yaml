@@ -1,0 +1,134 @@
+schema_version: "1.0"
+
+product:
+  name: Bifrost
+  type: ai_execution_layer
+  description: "Intelligent AI execution layer that routes, optimizes, caches, validates, and recovers AI requests across multiple model providers"
+  website: https://bifrost.omixsystems.store
+  version: "0.1.0"
+  author: OMIX Digital Solutions
+  location: Kericho, Kenya
+
+api:
+  type: openai_compatible
+  base_url: https://bifrost.omixsystems.store/v1
+  auth: bearer_token
+  endpoints:
+    - method: POST
+      path: /v1/chat/completions
+      description: Chat completions with intelligent routing and optimization
+    - method: GET
+      path: /v1/models
+      description: List all available models across providers
+
+capabilities:
+  routing:
+    enabled: true
+    description: "Automatic model/provider selection based on capability, cost, latency, health, and quota"
+    scoring:
+      capability_match: 0.30
+      quality: 0.25
+      reliability: 0.15
+      cost_efficiency: 0.15
+      latency: 0.10
+      availability: 0.05
+  optimization:
+    enabled: true
+    description: "Prompt compression, tool output compression, context pruning, deduplication"
+    features:
+      - prompt_compression
+      - tool_output_compression
+      - semantic_cache
+      - recoverable_context
+      - context_dependency_graph
+      - context_garbage_collection
+  caching:
+    enabled: true
+    types:
+      - exact_match
+      - semantic_similarity
+  reliability:
+    enabled: true
+    features:
+      - automatic_fallback
+      - circuit_breakers
+      - provider_cooldowns
+      - self_healing
+      - backpressure
+      - priority_queues
+      - stream_keepalive
+      - multi_account_rotation
+  control:
+    enabled: true
+    features:
+      - policy_as_code
+      - budgets
+      - quotas
+      - data_residency
+      - tenant_isolation
+      - provider_restrictions
+  observability:
+    enabled: true
+    features:
+      - request_tracing
+      - cost_attribution
+      - provider_health
+      - routing_decisions
+      - fallback_events
+
+providers:
+  - id: ollama
+    name: Ollama
+    type: local
+    models: [llama3, mistral, llama3.1, gemma2, codellama, deepseek-r1, qwen2.5]
+  - id: openai
+    name: OpenAI
+    type: paid
+    models: [gpt-4o, gpt-4o-mini, gpt-4-turbo]
+  - id: gemini
+    name: Google Gemini
+    type: free_tier
+    models: [gemini-2.0-flash, gemini-2.5-pro, gemini-2.5-flash]
+  - id: groq
+    name: Groq
+    type: free_tier
+    models: [llama-3.3-70b-versatile, mixtral-8x7b-32768]
+  - id: cerebras
+    name: Cerebras
+    type: free_tier
+    models: [llama-3.3-70b, llama-3.1-8b]
+  - id: sambanova
+    name: SambaNova
+    type: free_tier
+    models: [Meta-Llama-3.3-70B-Instruct, DeepSeek-R1]
+  - id: openrouter
+    name: OpenRouter
+    type: free_tier
+    models: [meta-llama/llama-3.3-70b-instruct:free, qwen/qwen-2.5-72b-instruct:free]
+  - id: cloudflare
+    name: Cloudflare Workers AI
+    type: free_tier
+    models: [@cf/meta/llama-3.3-70b-instruct-fp16]
+  - id: mistral
+    name: Mistral AI
+    type: free_tier
+    models: [mistral-small-latest, mistral-large-latest]
+  - id: huggingface
+    name: HuggingFace
+    type: free_tier
+    models: [meta-llama/Llama-3.3-70B-Instruct]
+  - id: ollama-cloud
+    name: Ollama Cloud
+    type: free_tier
+    models: [gemma4:31b, gpt-oss:20b, nemotron-3-nano:30b]
+  - id: zen
+    name: Zen
+    type: paid
+    models: [zen-lite, zen-pro]
+  - id: bytez
+    name: Bytez
+    type: paid
+    models: [bytez-pro]
+
+total_models: 48
+total_providers: 14

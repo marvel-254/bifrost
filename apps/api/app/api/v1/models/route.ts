@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createSeedRegistry } from '@bifrost/models';
+import { createSeedRegistry } from '../../../../imports';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';

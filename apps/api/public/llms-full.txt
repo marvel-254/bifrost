@@ -1,0 +1,108 @@
+# Bifrost — Full Product Documentation
+
+## Overview
+Bifrost is an intelligent AI execution layer that sits between your application and AI model providers. It understands requests, optimizes context, selects optimal routes, validates responses, and recovers from failures automatically.
+
+## Execution Pipeline
+Every request passes through:
+1. **Understand** — Classify task type, extract requirements, resolve tenant
+2. **Optimize** — Compress prompts, deduplicate tool output, prune stale context
+3. **Cache** — Check exact match and semantic similarity caches
+4. **Predict** — Estimate latency, cost, and success probability per candidate
+5. **Route** — Score candidates on capability, quality, latency, cost, health, quota
+6. **Execute** — Call selected provider with optimized payload
+7. **Validate** — Verify response quality, format, and safety constraints
+8. **Recover** — Retry, failover, circuit break, escalate on failure
+9. **Observe** — Log trace, metrics, cost, and decision explanation
+
+## Routing Engine
+- Hard constraints: capability match, context size, provider enabled, budget, restrictions
+- Soft scoring: capability match (30%), quality (25%), reliability (15%), cost (15%), latency (10%), availability (5%)
+- Deterministic given same inputs
+- Every decision is explainable with full score breakdown
+
+## Optimization Engine
+- Prompt compression with recoverable context
+- Tool output deduplication and normalization
+- Structural compression (boilerplate removal)
+- Context dependency graph analysis
+- Context garbage collection (stale/redundant removal)
+- Semantic caching (embed + similarity search)
+
+## Reliability System
+- Automatic fallback with bounded retry
+- Circuit breakers with provider cooldowns
+- Self-healing provider recovery
+- Multi-account rotation per provider
+- Stream keepalive for long completions
+- Priority queue ordering
+- Backpressure management
+
+## Provider Network
+14 providers, 48+ models:
+- **Local**: Ollama
+- **Free tier**: Gemini, Groq, Cerebras, SambaNova, OpenRouter, Cloudflare, Mistral, HuggingFace, Ollama Cloud
+- **Paid**: OpenAI, Anthropic, Zen, Bytez, Vercel Gateway
+
+## Policy Engine
+Policy-as-code with conditions:
+- Tag-based matching
+- Environment scoping
+- Capability requirements (tools, structured output, streaming)
+- Cost and latency limits
+- Data residency rules
+- Provider/model restrictions
+- Tenant-specific overrides
+
+## Economics
+- Multi-account quota rotation
+- Quota forecasting
+- Cost optimization per request
+- Spend guardrails and budgets
+- Provider pricing metadata
+
+## Enterprise Features
+- Tenant isolation
+- Data residency controls
+- Provider restrictions per tenant
+- Budget enforcement
+- Audit logging
+- Rate limiting per key/tenant
+
+## API Format
+OpenAI-compatible. Drop-in replacement for:
+- OpenAI SDK
+- LangChain
+- LlamaIndex
+- Vercel AI SDK
+- Any OpenAI-compatible client
+
+## Example Request
+```json
+POST /v1/chat/completions
+{
+  "model": "bifrost/auto",
+  "messages": [{"role": "user", "content": "Analyze this codebase..."}]
+}
+```
+
+## Example Response
+```json
+{
+  "id": "bifrost_1234",
+  "model": "claude-sonnet-4",
+  "choices": [{"message": {"role": "assistant", "content": "..."}}],
+  "usage": {"prompt_tokens": 1200, "completion_tokens": 800}
+}
+```
+
+## Dashboard
+Real-time control plane at /dashboard:
+- Model catalog (48 models)
+- Provider key management
+- Gateway key management
+- Playground for testing
+
+## Built By
+OMIX Digital Solutions — Kericho, Kenya
+https://omixsystems.store

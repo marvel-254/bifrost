@@ -1,0 +1,341 @@
+{
+  "version": 1,
+  "sources": [
+    {
+      "id": 1,
+      "url": "https://prismix.dev/guides/openrouter-guide",
+      "title": "",
+      "accessed": "2026-09-08"
+    },
+    {
+      "id": 2,
+      "url": "https://zhcinstitute.com/research/openrouter-free-models-guide",
+      "title": "",
+      "accessed": "2026-09-08"
+    },
+    {
+      "id": 3,
+      "url": "https://free-model.com/providers/openrouter",
+      "title": "",
+      "accessed": "2026-09-08"
+    },
+    {
+      "id": 4,
+      "url": "https://llmtokencounter.online/openrouter-free-models.html",
+      "title": "",
+      "accessed": "2026-09-08"
+    },
+    {
+      "id": 5,
+      "url": "https://gist.github.com/rlnorthcutt/e6f392cd1ffb1339cc42dfb024c3cf7f",
+      "title": "",
+      "accessed": "2026-09-08"
+    },
+    {
+      "id": 6,
+      "url": "https://docs.perplexity.ai/docs/getting-started/pricing",
+      "title": "",
+      "accessed": "2026-09-08"
+    },
+    {
+      "id": 7,
+      "url": "https://www.perplexity.ai/help-center/en/articles/10354847-api-payment-and-billing.html",
+      "title": "",
+      "accessed": "2026-09-08"
+    },
+    {
+      "id": 8,
+      "url": "https://console.groq.com/docs/rate-limits",
+      "title": "",
+      "accessed": "2026-09-08"
+    },
+    {
+      "id": 9,
+      "url": "https://www.grizzlypeaksoftware.com/articles/p/groq-api-free-tier-limits-in-2026-what-you-actually-get-uwysd6mb",
+      "title": "",
+      "accessed": "2026-09-08"
+    },
+    {
+      "id": 10,
+      "url": "https://tokenmix.ai/blog/groq-api-access-2026-free-tier-rate-limits",
+      "title": "",
+      "accessed": "2026-09-08"
+    },
+    {
+      "id": 11,
+      "url": "https://www.theverge.com/2025/3/12/24406951/openrouter-free-tier-models-whats-available",
+      "title": "",
+      "accessed": "2026-09-08"
+    },
+    {
+      "id": 12,
+      "url": "https://lite.gorskyportal.com/blog/free-models",
+      "title": "",
+      "accessed": "2026-09-08"
+    },
+    {
+      "id": 13,
+      "url": "https://huggingface.co/docs/api-inference/quicktour",
+      "title": "",
+      "accessed": "2026-09-08"
+    },
+    {
+      "id": 14,
+      "url": "https://console.deepinfra.com/pricing",
+      "title": "",
+      "accessed": "2026-09-08"
+    },
+    {
+      "id": 15,
+      "url": "https://www.novita.ai/docs/pricing",
+      "title": "",
+      "accessed": "2026-09-08"
+    },
+    {
+      "id": 16,
+      "url": "https://openrouter.ai/models?free=true",
+      "title": "",
+      "accessed": "2026-09-08"
+    },
+    {
+      "id": 17,
+      "url": "https://openrouter.ai/feed",
+      "title": "",
+      "accessed": "2026-09-08"
+    },
+    {
+      "id": 18,
+      "url": "https://openrouter.ai/models",
+      "title": "",
+      "accessed": "2026-09-08"
+    },
+    {
+      "id": 19,
+      "url": "https://openrouter.ai/pricing",
+      "title": "",
+      "accessed": "2026-09-08"
+    },
+    {
+      "id": 20,
+      "url": "https://openrouter.ai/terms",
+      "title": "",
+      "accessed": "2026-09-08"
+    },
+    {
+      "id": 21,
+      "url": "https://console.groq.com/docs/getting-started",
+      "title": "",
+      "accessed": "2026-09-08"
+    },
+    {
+      "id": 22,
+      "url": "https://github.com/groq/groq-api-docs",
+      "title": "",
+      "accessed": "2026-09-08"
+    },
+    {
+      "id": 23,
+      "url": "https://docs.together.ai/docs/serverless/models",
+      "title": "",
+      "accessed": "2026-09-08"
+    },
+    {
+      "id": 24,
+      "url": "https://together.ai/pricing",
+      "title": "",
+      "accessed": "2026-09-08"
+    },
+    {
+      "id": 25,
+      "url": "https://github.com/togethercomputer/together-ai-python",
+      "title": "",
+      "accessed": "2026-09-08"
+    },
+    {
+      "id": 26,
+      "url": "https://fireworks.ai/pricing",
+      "title": "",
+      "accessed": "2026-09-08"
+    },
+    {
+      "id": 27,
+      "url": "https://fireworks.ai/models",
+      "title": "",
+      "accessed": "2026-09-08"
+    },
+    {
+      "id": 28,
+      "url": "https://github.com/fireworks-ai/fireworks-python",
+      "title": "",
+      "accessed": "2026-09-08"
+    },
+    {
+      "id": 29,
+      "url": "https://ai.google.dev/gemini-api/docs",
+      "title": "",
+      "accessed": "2026-09-08"
+    },
+    {
+      "id": 30,
+      "url": "https://ai.google.dev/pricing",
+      "title": "",
+      "accessed": "2026-09-08"
+    },
+    {
+      "id": 31,
+      "url": "https://ai.google.dev/gemini-api/models",
+      "title": "",
+      "accessed": "2026-09-08"
+    },
+    {
+      "id": 32,
+      "url": "https://deepinfra.com/pricing",
+      "title": "",
+      "accessed": "2026-09-08"
+    },
+    {
+      "id": 33,
+      "url": "https://deepinfra.com/models",
+      "title": "",
+      "accessed": "2026-09-08"
+    },
+    {
+      "id": 34,
+      "url": "https://docs.deepinfra.com/docs/getting-started",
+      "title": "",
+      "accessed": "2026-09-08"
+    },
+    {
+      "id": 35,
+      "url": "https://huggingface.co/models?pipeline_tag=text-generation&sort=downloads",
+      "title": "",
+      "accessed": "2026-09-08"
+    },
+    {
+      "id": 36,
+      "url": "https://huggingface.co/inference-api",
+      "title": "",
+      "accessed": "2026-09-08"
+    },
+    {
+      "id": 37,
+      "url": "https://docs.perplexity.ai/docs/model-cards",
+      "title": "",
+      "accessed": "2026-09-08"
+    },
+    {
+      "id": 38,
+      "url": "https://perplexity.ai/pricing",
+      "title": "",
+      "accessed": "2026-09-08"
+    },
+    {
+      "id": 39,
+      "url": "https://docs.anyscale.com/pricing",
+      "title": "",
+      "accessed": "2026-09-08"
+    },
+    {
+      "id": 40,
+      "url": "https://docs.anyscale.com/endpoints/quickstart",
+      "title": "",
+      "accessed": "2026-09-08"
+    },
+    {
+      "id": 41,
+      "url": "https://console.cerebras.ai/pricing",
+      "title": "",
+      "accessed": "2026-09-08"
+    },
+    {
+      "id": 42,
+      "url": "https://docs.cerebras.ai",
+      "title": "",
+      "accessed": "2026-09-08"
+    },
+    {
+      "id": 43,
+      "url": "https://novita.ai/pricing",
+      "title": "",
+      "accessed": "2026-09-08"
+    },
+    {
+      "id": 44,
+      "url": "https://novita.ai/models",
+      "title": "",
+      "accessed": "2026-09-08"
+    },
+    {
+      "id": 45,
+      "url": "https://www.deepseek.com/pricing",
+      "title": "",
+      "accessed": "2026-09-08"
+    },
+    {
+      "id": 46,
+      "url": "https://api-docs.deepseek.com",
+      "title": "",
+      "accessed": "2026-09-08"
+    },
+    {
+      "id": 47,
+      "url": "https:// Mistral-ai.github.io/mistralai-python",
+      "title": "",
+      "accessed": "2026-09-08"
+    },
+    {
+      "id": 48,
+      "url": "https://huggingface.co/mistralai",
+      "title": "",
+      "accessed": "2026-09-08"
+    },
+    {
+      "id": 49,
+      "url": "https://docs.anthropic.com/en/docs/sdks/python-sdk",
+      "title": "",
+      "accessed": "2026-09-08"
+    },
+    {
+      "id": 50,
+      "url": "https://www.anthropic.com/pricing",
+      "title": "",
+      "accessed": "2026-09-08"
+    },
+    {
+      "id": 51,
+      "url": "https://cohere.com/pricing",
+      "title": "",
+      "accessed": "2026-09-08"
+    },
+    {
+      "id": 52,
+      "url": "https://docs.cohere.com/docs/sdk-overview",
+      "title": "",
+      "accessed": "2026-09-08"
+    },
+    {
+      "id": 53,
+      "url": "https://www.ai21.com/pricing",
+      "title": "",
+      "accessed": "2026-09-08"
+    },
+    {
+      "id": 54,
+      "url": "https://docs.ai21.com",
+      "title": "",
+      "accessed": "2026-09-08"
+    },
+    {
+      "id": 55,
+      "url": "https://writer.com/product/api",
+      "title": "",
+      "accessed": "2026-09-08"
+    },
+    {
+      "id": 56,
+      "url": "https://developer.writer.com",
+      "title": "",
+      "accessed": "2026-09-08"
+    }
+  ]
+}

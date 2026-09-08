@@ -1,0 +1,70 @@
+// Re-export all workspace packages for Vercel compatibility
+// Vercel pnpm doesn't create workspace symlinks, so we use relative imports
+// and re-export from a single location that all API routes can import from.
+
+export { createSeedRegistry, type ModelRegistry } from '../../packages/models/src/index';
+export {
+  ProviderRegistry,
+  createOllamaProvider, createOpenAiProvider, createZenProvider,
+  createOllamaCloudProvider, createBytezProvider, createGeminiProvider,
+  createGroqProvider, createCerebrasProvider, createSambaNovaProvider,
+  createOpenRouterProvider, createCloudflareProvider, createMistralProvider,
+  createHuggingFaceProvider, createVercelGatewayProvider,
+  type ProviderAdapter,
+  type NormalizedRequest,
+  type NormalizedMessage,
+  type NormalizedResponse,
+  type NormalizedStreamEvent,
+  type ProviderCapabilities,
+  type ProviderError,
+} from '../../packages/providers/src/index';
+export {
+  PolicyEngine,
+  route,
+  buildCandidates,
+  DEFAULT_ROUTING_STRATEGY,
+  DEFAULT_STRATEGY_WEIGHTS,
+  type RoutingMode,
+  type RoutingStrategy,
+  type HardConstraints,
+  type RoutingCandidate,
+  type RoutingDecision,
+  type RoutingScores,
+  type CandidateBuildOptions,
+} from '../../packages/router/src/index';
+export {
+  CompressionEngine,
+  analyzeRequest,
+  detectBoilerplate,
+  canonicalizePrompt,
+  compressStructural,
+  deduplicateContext,
+  pruneContext,
+  compressToolOutput,
+  type CompressionResult,
+  type CompressionLevel,
+  type CompressionConfig,
+  type TokenAnalysis,
+  type CompressionPass,
+  type ContextItem,
+  type BoilerplateRule,
+  type SafetyClassification,
+  type CanonicalOperation,
+} from '../../packages/compression/src/index';
+export {
+  CacheEngine,
+  InMemoryCacheStore,
+  DEFAULT_CACHE_POLICY,
+  createCachePolicy,
+  createTenantCachePolicy,
+  createModelCachePolicy,
+  normalizeRequest,
+  exactFingerprint,
+  semanticFingerprint,
+  type CachePolicy,
+  type CacheEntry,
+  type CacheHit,
+  type CacheEngineConfig,
+  type CacheEngineStats,
+  type SemanticFingerprintConfig,
+} from '../../packages/cache/src/index';

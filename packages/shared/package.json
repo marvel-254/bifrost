@@ -10,11 +10,12 @@
     "test": "tsx node_modules/jest/bin/jest.js packages/shared/tests"
   },
   "devDependencies": {
-    "typescript": "^5.6.0",
+    "@types/jest": "^29.5.0",
     "jest": "^29.7.0",
-    "@types/jest": "^29.5.0"
+    "typescript": "^5.6.0"
   },
   "dependencies": {
+    "@neondatabase/serverless": "^0.10.4",
     "@types/jest": "^29.5.0",
     "@types/node": "^22.0.0",
     "jest": "^29.7.0"

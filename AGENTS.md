@@ -1,5 +1,17 @@
 # Bifröst — AGENTS.md
 
+## 0. Repo Quick Facts
+
+- Stack: pnpm 10.16.0 workspace, TS 5.6, Next.js 15 App Router, Jest+ts-jest, Neon serverless Postgres.
+- Branch: `master` (single default). Remote: origin (GitHub).
+- Entrypoints: API app `apps/api`; real routes under `apps/api/app/api/...`. Packages: `models`, `providers`, `router`, `shared`, `storage`.
+- Vercel pnpm builds do NOT create workspace symlinks. `apps/api/next.config.mjs` re-aliases `@bifrost/*` → `packages/*/src` and lists `transpilePackages`. Adding a package requires updating both lists.
+- Generated JS artifacts (`.js`/`.d.ts`/`.map`) are committed for `models`, `providers`, `shared`. `router` has no built artifacts. Don't delete committed `.js` files wholesale.
+- DB: `database/schema.sql` is canonical. Migrations live in `database/migrations/` (currently untracked). Run in order; never hand-edit prod schema.
+- Secrets: `.env.local` exists locally with real `DATABASE_URL` + `VERCEL_OIDC_TOKEN`; it is gitignored. Never commit secrets.
+
+---
+
 ## 1. Mission
 
 You are an engineering agent working on Bifröst, a lightweight OpenAI-compatible AI gateway and intelligent model router.
@@ -693,3 +705,14 @@ large architecture
 The project should earn complexity through real requirements.
 
 Do not build the future architecture before the current version needs it.
+
+---
+
+## 31. Developer Commands
+
+- Install: `pnpm install`
+- Dev server: `pnpm dev` (runs `@bifrost/api` Next.js on port 3000)
+- Build: `pnpm build`
+- Typecheck: `pnpm typecheck` (api only; individual packages: `pnpm --filter @bifrost/router typecheck`)
+- Test: `pnpm test` (Jest across `packages/models/tests` + `packages/providers/tests`). Single package: `pnpm --filter @bifrost/models test`. Note the root `test` script hardcodes a path to the pnpm-stored jest binary.
+- Vercel deploy config: `vercel.json` + `.vercel/project.json`. Build command: `pnpm --filter @bifrost/api build`.

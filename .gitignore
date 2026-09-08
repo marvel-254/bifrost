@@ -10,3 +10,4 @@ coverage
 .next
 *.nft.json
 .vercel
+.env*

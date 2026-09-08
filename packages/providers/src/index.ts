@@ -1,4 +1,5 @@
 export * from './types';
+export * from './adapter';
 export { OllamaProvider, createOllamaProvider } from './ollama';
 export { OpenAiProvider, createOpenAiProvider } from './openai';
 export { ZenProvider, createZenProvider } from './zen';
@@ -12,4 +13,18 @@ export { OpenRouterProvider, createOpenRouterProvider } from './openrouter';
 export { CloudflareProvider, createCloudflareProvider } from './cloudflare';
 export { MistralProvider, createMistralProvider } from './mistral';
 export { HuggingFaceProvider, createHuggingFaceProvider } from './huggingface';
+export { VercelGatewayProvider, createVercelGatewayProvider } from './vercel-gateway';
 export { ProviderRegistry, createDefaultRegistry, type IProvider, type ProviderRegistryConfig } from './registry';
+export {
+  KeyRotator,
+  type RotatableKey,
+  type RotationStrategy,
+  type KeyRotatorConfig,
+} from './key-rotation';
+export {
+  createProviderWithRotation,
+  clearRotatorCache,
+  getRotatorCache,
+  invalidateProviderCache,
+  type ProviderWithRotation,
+} from './provider-factory';

@@ -288,6 +288,14 @@ export class PolicyEngine {
     this.rules = customRules || [...rules];
   }
 
+  static getWeights(mode: string): StrategyWeights {
+    return STRATEGY_WEIGHTS[mode] || STRATEGY_WEIGHTS.balanced;
+  }
+
+  static getAvailableModes(): string[] {
+    return Object.keys(STRATEGY_WEIGHTS);
+  }
+
   /**
    * Evaluate all candidates. Returns scored + filtered list sorted by finalScore desc.
    */

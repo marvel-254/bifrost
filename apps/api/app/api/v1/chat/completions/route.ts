@@ -1,18 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createSeedRegistry } from '@bifrost/models';
-import type { ModelRegistry } from '@bifrost/models';
 import {
+  createSeedRegistry, type ModelRegistry,
   ProviderRegistry,
   createOllamaProvider, createOpenAiProvider, createZenProvider,
   createOllamaCloudProvider, createBytezProvider, createGeminiProvider,
   createGroqProvider, createCerebrasProvider, createSambaNovaProvider,
   createOpenRouterProvider, createCloudflareProvider, createMistralProvider,
-  createHuggingFaceProvider,
-} from '@bifrost/providers';
-import { PolicyEngine } from '@bifrost/routing';
+  createHuggingFaceProvider, createVercelGatewayProvider,
+  PolicyEngine,
+  CompressionEngine,
+  route,
+  buildCandidates,
+  DEFAULT_ROUTING_STRATEGY,
+  type NormalizedMessage,
+  type NormalizedRequest,
+} from '../../../../../imports';
+import { getAllProviderKeys } from '../../../../../../../packages/shared/src/db';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+
+// ── DB key loader ─────────────────────────────────────────────────────────
+
+async function loadDbKeys(): Promise<Record<string, string>> {
+  try {
+    const keys = await getAllProviderKeys();
+    const map: Record<string, string> = {};
+    for (const k of keys) {
+      if (k.enabled && k.api_key) map[k.provider] = k.api_key;
+    }
+    return map;
+  } catch { return {}; }
+}
+
+function envOrDb(envVal: string | undefined, dbVal: string | undefined): string {
+  return envVal || dbVal || '';
+}
 
 // ── Lazy singletons ────────────────────────────────────────────────────────
 
@@ -25,9 +48,10 @@ function getModels(): ModelRegistry {
   return _models;
 }
 
-function getProviders(): ProviderRegistry {
+async function getProviders(): Promise<ProviderRegistry> {
   if (!_providers) {
     _providers = new ProviderRegistry({ defaultProvider: 'gemini' });
+    const db = await loadDbKeys();
 
     // Tier 0 — Local
     _providers.register(createOllamaProvider({
@@ -38,68 +62,73 @@ function getProviders(): ProviderRegistry {
 
     // Tier 1 — Recurring free
     _providers.register(createGeminiProvider({
-      apiKey: process.env.GEMINI_API_KEY || '',
+      apiKey: envOrDb(process.env.GEMINI_API_KEY, db['gemini']),
       defaultModel: 'gemini-2.0-flash',
       timeoutMs: Number(process.env.GEMINI_TIMEOUT_MS || 60000),
     }));
     _providers.register(createGroqProvider({
-      apiKey: process.env.GROQ_API_KEY || '',
+      apiKey: envOrDb(process.env.GROQ_API_KEY, db['groq']),
       defaultModel: 'llama-3.3-70b-versatile',
       timeoutMs: Number(process.env.GROQ_TIMEOUT_MS || 30000),
     }));
     _providers.register(createCerebrasProvider({
-      apiKey: process.env.CEREBRAS_API_KEY || '',
+      apiKey: envOrDb(process.env.CEREBRAS_API_KEY, db['cerebras']),
       defaultModel: 'llama-3.3-70b',
       timeoutMs: Number(process.env.CEREBRAS_TIMEOUT_MS || 30000),
     }));
     _providers.register(createSambaNovaProvider({
-      apiKey: process.env.SAMBANOVA_API_KEY || '',
+      apiKey: envOrDb(process.env.SAMBANOVA_API_KEY, db['sambanova']),
       defaultModel: 'Meta-Llama-3.3-70B-Instruct',
       timeoutMs: Number(process.env.SAMBANOVA_TIMEOUT_MS || 60000),
     }));
     _providers.register(createOpenRouterProvider({
-      apiKey: process.env.OPENROUTER_API_KEY || '',
+      apiKey: envOrDb(process.env.OPENROUTER_API_KEY, db['openrouter']),
       defaultModel: 'meta-llama/llama-3.3-70b-instruct:free',
       timeoutMs: Number(process.env.OPENROUTER_TIMEOUT_MS || 60000),
     }));
     _providers.register(createCloudflareProvider({
       accountId: process.env.CLOUDFLARE_ACCOUNT_ID || '',
-      apiKey: process.env.CLOUDFLARE_API_KEY || '',
+      apiKey: envOrDb(process.env.CLOUDFLARE_API_KEY, db['cloudflare']),
       defaultModel: '@cf/meta/llama-3.3-70b-instruct-fp16',
       timeoutMs: Number(process.env.CLOUDFLARE_TIMEOUT_MS || 30000),
     }));
     _providers.register(createMistralProvider({
-      apiKey: process.env.MISTRAL_API_KEY || '',
+      apiKey: envOrDb(process.env.MISTRAL_API_KEY, db['mistral']),
       defaultModel: 'mistral-small-latest',
       timeoutMs: Number(process.env.MISTRAL_TIMEOUT_MS || 60000),
     }));
     _providers.register(createHuggingFaceProvider({
-      apiKey: process.env.HUGGINGFACE_API_KEY || '',
+      apiKey: envOrDb(process.env.HUGGINGFACE_API_KEY, db['huggingface']),
       defaultModel: 'meta-llama/Llama-3.3-70B-Instruct',
       timeoutMs: Number(process.env.HUGGINGFACE_TIMEOUT_MS || 60000),
+    }));
+    _providers.register(createVercelGatewayProvider({
+      apiKey: envOrDb(process.env.VERCEL_GATEWAY_API_KEY, db['vercel-gateway']),
+      defaultModel: 'openai/gpt-4o-mini',
+      timeoutMs: Number(process.env.VERCEL_GATEWAY_TIMEOUT_MS || 60000),
     }));
 
     // Tier 3 — Paid
     _providers.register(createOpenAiProvider({
-      apiKey: process.env.OPENAI_API_KEY || '',
+      apiKey: envOrDb(process.env.OPENAI_API_KEY, db['openai']),
       baseUrl: process.env.OPENAI_BASE_URL || undefined,
       defaultModel: 'gpt-4o',
       timeoutMs: Number(process.env.OPENAI_TIMEOUT_MS || 60000),
     }));
     _providers.register(createZenProvider({
-      apiKey: process.env.ZEN_API_KEY || '',
+      apiKey: envOrDb(process.env.ZEN_API_KEY, db['zen']),
       baseUrl: process.env.ZEN_BASE_URL || undefined,
       defaultModel: 'zen-lite',
       timeoutMs: Number(process.env.ZEN_TIMEOUT_MS || 60000),
     }));
     _providers.register(createOllamaCloudProvider({
-      apiKey: process.env.OLLAMA_CLOUD_API_KEY || '',
+      apiKey: envOrDb(process.env.OLLAMA_CLOUD_API_KEY, db['ollama-cloud']),
       baseUrl: process.env.OLLAMA_CLOUD_BASE_URL || undefined,
       defaultModel: 'llama3.1-cloud',
       timeoutMs: Number(process.env.OLLAMA_CLOUD_TIMEOUT_MS || 60000),
     }));
     _providers.register(createBytezProvider({
-      apiKey: process.env.BYTEZ_API_KEY || '',
+      apiKey: envOrDb(process.env.BYTEZ_API_KEY, db['bytez']),
       baseUrl: process.env.BYTEZ_BASE_URL || undefined,
       defaultModel: 'bytez-pro',
       timeoutMs: Number(process.env.BYTEZ_TIMEOUT_MS || 60000),
@@ -111,6 +140,20 @@ function getProviders(): ProviderRegistry {
 function getPolicy(): PolicyEngine {
   if (!_policy) _policy = new PolicyEngine();
   return _policy;
+}
+
+let _compression: CompressionEngine | null = null;
+
+function getCompression(): CompressionEngine {
+  if (!_compression) {
+    const models = getModels();
+    _compression = new CompressionEngine({
+      registry: {
+        getModel: (id: string) => models.getModel(id),
+      },
+    });
+  }
+  return _compression;
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -162,34 +205,67 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   if (!model) return NextResponse.json({ error: { message: `Model '${modelId}' not found`, type: 'model_not_found' } }, { status: 404 });
   if (!model.enabled) return NextResponse.json({ error: { message: `Model '${modelId}' is disabled`, type: 'invalid_request_error' } }, { status: 400 });
 
-  // When a specific model is requested, go direct. When "auto", use policy engine.
+  // When a specific model is requested, go direct. When "auto", use router.
   let providerName = model.provider;
   let selectedModelId = modelId;
 
   if (modelId === 'auto') {
-    const registry = getProviders();
-    const policy = getPolicy();
+    const registry = await getProviders();
     const allModels = models.listModels();
-    const candidates = allModels
-      .filter(m => m.enabled)
-      .map(m => ({
-        provider: { id: m.provider, name: m.provider, enabled: true, billingType: 'free' as const, streaming: true },
-        model: { id: m.id, provider: m.provider, contextWindow: m.contextWindow, capabilities: m.capabilities, inputPrice: m.inputPrice ?? 0, outputPrice: m.outputPrice ?? 0, enabled: true },
-        request: { tools: !!body.tools, streaming: stream, costMode: costMode as any, task: body.task as any, inputTokens: body.context_tokens as number | undefined },
-      }));
+    const candidates = buildCandidates(models, registry, { includeDisabled: false });
 
-    const results = policy.evaluate(candidates, strategy);
-    const best = results.find(r => !r.hardFiltered);
-    if (!best) return NextResponse.json({ error: { message: 'No eligible model for request', type: 'routing_error' } }, { status: 404 });
-    providerName = best.provider;
-    selectedModelId = best.model;
+    const routingMode = (body.strategy as string) || 'balanced';
+    const strategy = {
+      ...DEFAULT_ROUTING_STRATEGY,
+      mode: routingMode as 'manual' | 'priority' | 'cheapest' | 'fastest' | 'balanced' | 'auto',
+    };
+
+    const normalizedRequest: NormalizedRequest = {
+      model: modelId,
+      messages: [],
+      tools: body.tools as any,
+      metadata: {
+        inputTokens: body.context_tokens as number | undefined,
+        agentMode: !!body.agent_mode,
+        requiresTools: !!body.tools,
+      },
+    };
+
+    const decision = route(normalizedRequest, strategy, candidates);
+    if (!decision.primary) {
+      return NextResponse.json({ error: { message: 'No eligible model for request', type: 'routing_error' } }, { status: 404 });
+    }
+    providerName = decision.primary.provider.id;
+    selectedModelId = decision.primary.model.id;
   }
 
-  const registry = getProviders();
+  const registry = await getProviders();
   const provider = registry.getProvider(providerName);
   if (!provider) return NextResponse.json({ error: { message: `Provider '${providerName}' not registered`, type: 'internal_error' } }, { status: 501 });
 
-  const requestPayload: Record<string, unknown> = { model: selectedModelId, messages, temperature, max_tokens: maxTokens };
+  let optimizedMessages = messages;
+  try {
+    const compression = getCompression();
+    const normalizedMessages: NormalizedMessage[] = (messages as Array<{ role: string; content: string }>).map(m => ({ role: m.role as NormalizedMessage['role'], content: m.content }));
+    const result = await compression.compress({
+      model: selectedModelId,
+      messages: normalizedMessages,
+      temperature,
+      top_p: body.top_p as number | undefined,
+      max_tokens: maxTokens,
+      stream,
+      stop: body.stop as string | string[] | undefined,
+      tools: body.tools as any,
+      tool_choice: body.tool_choice as any,
+      user: body.user as string | undefined,
+      metadata: body.metadata as Record<string, unknown> | undefined,
+    });
+    optimizedMessages = (result.optimizedRequest as { messages: NormalizedMessage[] }).messages;
+  } catch {
+    // Compression is best-effort; proceed with original messages on failure.
+  }
+
+  const requestPayload: Record<string, unknown> = { model: selectedModelId, messages: optimizedMessages, temperature, max_tokens: maxTokens };
   if (body.tools) requestPayload.tools = body.tools;
   if (body.tool_choice) requestPayload.tool_choice = body.tool_choice;
 

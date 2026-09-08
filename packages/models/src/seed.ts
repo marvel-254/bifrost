@@ -17,9 +17,10 @@ const SEED_MODELS: Model[] = [
   { id: 'zen-lite', provider: 'zen', displayName: 'Zen Lite', contextWindow: 8192, capabilities: ['chat', 'completion'], inputPrice: 0.10, outputPrice: 0.30, enabled: true },
   { id: 'zen-pro', provider: 'zen', displayName: 'Zen Pro', contextWindow: 128000, capabilities: ['chat', 'completion', 'tool_use', 'vision'], inputPrice: 0.50, outputPrice: 1.50, enabled: true },
 
-  // ── Ollama Cloud (cheap paid) ───────────────────────────────────────────
-  { id: 'llama3.1-cloud', provider: 'ollama-cloud', displayName: 'Llama 3.1 (Cloud)', contextWindow: 128000, capabilities: ['chat', 'completion', 'tool_use', 'vision'], inputPrice: 0.025, outputPrice: 0.07, enabled: true },
-  { id: 'llama3-cloud', provider: 'ollama-cloud', displayName: 'Llama 3 (Cloud)', contextWindow: 8192, capabilities: ['chat', 'completion', 'tool_use'], inputPrice: 0.025, outputPrice: 0.07, enabled: true },
+  // ── Ollama Cloud (ollama.com, free tier) ──────────────────────────────────
+  { id: 'gemma4:31b', provider: 'ollama-cloud', displayName: 'Gemma 4 31B (Cloud)', contextWindow: 128000, capabilities: ['chat', 'completion'], inputPrice: 0, outputPrice: 0, enabled: true },
+  { id: 'gpt-oss:20b', provider: 'ollama-cloud', displayName: 'GPT-OSS 20B (Cloud)', contextWindow: 128000, capabilities: ['chat', 'completion'], inputPrice: 0, outputPrice: 0, enabled: true },
+  { id: 'nemotron-3-nano:30b', provider: 'ollama-cloud', displayName: 'Nemotron 3 Nano 30B (Cloud)', contextWindow: 128000, capabilities: ['chat', 'completion'], inputPrice: 0, outputPrice: 0, enabled: true },
 
   // ── Bytez (paid) ────────────────────────────────────────────────────────
   { id: 'bytez-pro', provider: 'bytez', displayName: 'Bytez Pro', contextWindow: 128000, capabilities: ['chat', 'completion', 'tool_use', 'vision'], inputPrice: 0.50, outputPrice: 1.50, enabled: true },
@@ -62,6 +63,20 @@ const SEED_MODELS: Model[] = [
   { id: 'meta-llama/Llama-3.3-70B-Instruct', provider: 'huggingface', displayName: 'Llama 3.3 70B (HF)', contextWindow: 128000, capabilities: ['chat', 'completion'], inputPrice: 0, outputPrice: 0, enabled: true },
   { id: 'Qwen/Qwen2.5-72B-Instruct', provider: 'huggingface', displayName: 'Qwen 2.5 72B (HF)', contextWindow: 128000, capabilities: ['chat', 'completion'], inputPrice: 0, outputPrice: 0, enabled: true },
   { id: 'mistralai/Mistral-7B-Instruct-v0.3', provider: 'huggingface', displayName: 'Mistral 7B (HF)', contextWindow: 32768, capabilities: ['chat', 'completion'], inputPrice: 0, outputPrice: 0, enabled: true },
+
+  // ── Vercel AI Gateway ($5/mo free credit, 275+ models, zero markup) ──────
+  { id: 'openai/gpt-4o', provider: 'vercel-gateway', displayName: 'GPT-4o (VG)', contextWindow: 128000, capabilities: ['chat', 'completion', 'vision', 'tool_use'], inputPrice: 0, outputPrice: 0, enabled: true },
+  { id: 'openai/gpt-4o-mini', provider: 'vercel-gateway', displayName: 'GPT-4o Mini (VG)', contextWindow: 128000, capabilities: ['chat', 'completion', 'tool_use'], inputPrice: 0, outputPrice: 0, enabled: true },
+  { id: 'openai/gpt-5.6-sol', provider: 'vercel-gateway', displayName: 'GPT-5.6 Sol (VG)', contextWindow: 128000, capabilities: ['chat', 'completion', 'vision', 'tool_use'], inputPrice: 0, outputPrice: 0, enabled: true },
+  { id: 'anthropic/claude-sonnet-4', provider: 'vercel-gateway', displayName: 'Claude Sonnet 4 (VG)', contextWindow: 200000, capabilities: ['chat', 'completion', 'vision', 'tool_use'], inputPrice: 0, outputPrice: 0, enabled: true },
+  { id: 'anthropic/claude-opus-4', provider: 'vercel-gateway', displayName: 'Claude Opus 4 (VG)', contextWindow: 200000, capabilities: ['chat', 'completion', 'vision', 'tool_use'], inputPrice: 0, outputPrice: 0, enabled: true },
+  { id: 'google/gemini-2.5-pro', provider: 'vercel-gateway', displayName: 'Gemini 2.5 Pro (VG)', contextWindow: 1048576, capabilities: ['chat', 'completion', 'vision', 'tool_use'], inputPrice: 0, outputPrice: 0, enabled: true },
+  { id: 'google/gemini-2.5-flash', provider: 'vercel-gateway', displayName: 'Gemini 2.5 Flash (VG)', contextWindow: 1048576, capabilities: ['chat', 'completion', 'vision'], inputPrice: 0, outputPrice: 0, enabled: true },
+  { id: 'deepseek/deepseek-v4-flash', provider: 'vercel-gateway', displayName: 'DeepSeek V4 Flash (VG)', contextWindow: 131072, capabilities: ['chat', 'completion'], inputPrice: 0, outputPrice: 0, enabled: true },
+  { id: 'deepseek/deepseek-v3', provider: 'vercel-gateway', displayName: 'DeepSeek V3 (VG)', contextWindow: 131072, capabilities: ['chat', 'completion'], inputPrice: 0, outputPrice: 0, enabled: true },
+  { id: 'deepseek/deepseek-v4-pro', provider: 'vercel-gateway', displayName: 'DeepSeek V4 Pro (VG)', contextWindow: 131072, capabilities: ['chat', 'completion'], inputPrice: 0, outputPrice: 0, enabled: true },
+  { id: 'meta-llama/llama-3.3-70b-instruct', provider: 'vercel-gateway', displayName: 'Llama 3.3 70B (VG)', contextWindow: 128000, capabilities: ['chat', 'completion'], inputPrice: 0, outputPrice: 0, enabled: true },
+  { id: 'mistralai/mistral-large-latest', provider: 'vercel-gateway', displayName: 'Mistral Large (VG)', contextWindow: 128000, capabilities: ['chat', 'completion', 'tool_use'], inputPrice: 0, outputPrice: 0, enabled: true },
 ];
 
 export function createSeedRegistry(): ModelRegistry {

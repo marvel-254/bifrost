@@ -1,0 +1,38 @@
+# Bifrost
+
+## What is Bifrost?
+Bifrost is an intelligent AI execution layer. It routes, optimizes, caches, validates, and recovers AI requests across multiple model providers through a single OpenAI-compatible API.
+
+## Core Capabilities
+- **Routing**: Automatic model/provider selection based on capability, cost, latency, health, and quota
+- **Optimization**: Prompt compression, tool output compression, context pruning, deduplication
+- **Caching**: Exact match and semantic similarity caching
+- **Reliability**: Automatic fallback, circuit breakers, self-healing, multi-account rotation
+- **Control**: Policy-as-code, budgets, quotas, data residency, tenant isolation
+- **Observability**: Full request tracing, cost attribution, provider health monitoring
+
+## API
+Base URL: https://bifrost.omixsystems.store/v1
+Compatible with OpenAI API format.
+
+### Endpoints
+- POST /v1/chat/completions — Chat completions with routing and optimization
+- GET /v1/models — List all available models across providers
+
+## Architecture
+Application → Bifrost → Understand → Optimize → Cache → Predict → Route → Execute → Validate → Recover → Observe
+
+## Providers
+OpenAI, Anthropic, Google, Mistral, Groq, Cerebras, SambaNova, OpenRouter, Cloudflare, HuggingFace, Ollama Cloud, Zen, Bytez, Ollama (local)
+
+## Enterprise
+- Policy-as-code with visual and YAML modes
+- Tenant isolation and multi-account support
+- Data residency controls
+- Budget and quota enforcement
+
+## Documentation
+https://github.com/twistedoliver211fs-art/bifrost
+
+## Company
+Built by OMIX Digital Solutions. Kericho, Kenya.

@@ -1,0 +1,10 @@
+{
+  "name": "Bifrost — AI Gateway",
+  "short_name": "Bifrost",
+  "description": "Intelligent AI execution layer. One API for every model.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#22c55e",
+  "icons": []
+}
