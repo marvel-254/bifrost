@@ -7,9 +7,6 @@ AGENTS.md
 PLAN.md
 README.md
 
-# Monorepo packages — built into the API app
-packages/
-
 # Database (applied separately, not deployed)
 database/
 
