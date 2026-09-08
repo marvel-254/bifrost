@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@bifrost/shared": "workspace:*",
-    "@bifrost/router": "workspace:*"
+    "@bifrost/routing": "workspace:*"
   },
   "devDependencies": {
     "@types/jest": "^29.5.14",

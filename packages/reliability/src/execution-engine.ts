@@ -9,7 +9,7 @@ import type {
   AutoFallback,
   StreamKeepalive,
 } from './types';
-import type { ProviderAdapter, NormalizedRequest, NormalizedResponse, NormalizedStreamEvent, ProviderError } from '@bifrost/shared';
+import type { NormalizedRequest, NormalizedResponse, NormalizedStreamEvent, ProviderError } from '@bifrost/shared';
 
 export interface ExecutionRequest {
   request: NormalizedRequest;
@@ -25,7 +25,10 @@ export interface ExecutionOptions {
   backpressure: BackpressureEngine;
   priorityQueue: PriorityQueue;
   streamKeepalive: StreamKeepalive;
-  providerRegistry: Map<string, ProviderAdapter>;
+  providerRegistry: Map<string, {
+    chat(request: NormalizedRequest): Promise<NormalizedResponse>;
+    stream(request: NormalizedRequest): AsyncIterable<NormalizedStreamEvent>;
+  }>;
   config: ReliabilityConfig;
 }
 

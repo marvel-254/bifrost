@@ -9,11 +9,19 @@ import {
   createHuggingFaceProvider, createVercelGatewayProvider,
   PolicyEngine,
   CompressionEngine,
+  CircuitBreaker,
+  ProviderCooldown,
+  AutoFallback,
+  BackpressureEngine,
+  StreamKeepalive,
+  PriorityQueue,
+  ExecutionEngine,
   route,
   buildCandidates,
   DEFAULT_ROUTING_STRATEGY,
   type NormalizedMessage,
   type NormalizedRequest,
+  type RoutingCandidate,
 } from '../../../../../imports';
 import { getAllProviderKeys } from '../../../../../../../packages/shared/src/db';
 
@@ -42,6 +50,13 @@ function envOrDb(envVal: string | undefined, dbVal: string | undefined): string 
 let _models: ModelRegistry | null = null;
 let _providers: ProviderRegistry | null = null;
 let _policy: PolicyEngine | null = null;
+let _circuitBreaker: CircuitBreaker | null = null;
+let _cooldown: ProviderCooldown | null = null;
+let _fallback: AutoFallback | null = null;
+let _backpressure: BackpressureEngine | null = null;
+let _priorityQueue: PriorityQueue | null = null;
+let _streamKeepalive: StreamKeepalive | null = null;
+let _executionEngine: ExecutionEngine | null = null;
 
 function getModels(): ModelRegistry {
   if (!_models) _models = createSeedRegistry();
@@ -140,6 +155,63 @@ async function getProviders(): Promise<ProviderRegistry> {
 function getPolicy(): PolicyEngine {
   if (!_policy) _policy = new PolicyEngine();
   return _policy;
+}
+
+function getCircuitBreaker(): CircuitBreaker {
+  if (!_circuitBreaker) _circuitBreaker = new CircuitBreaker();
+  return _circuitBreaker;
+}
+
+function getCooldown(): ProviderCooldown {
+  if (!_cooldown) _cooldown = new ProviderCooldown();
+  return _cooldown;
+}
+
+function getFallback(): AutoFallback {
+  if (!_fallback) _fallback = new AutoFallback();
+  return _fallback;
+}
+
+function getBackpressure(): BackpressureEngine {
+  if (!_backpressure) _backpressure = new BackpressureEngine();
+  return _backpressure;
+}
+
+function getPriorityQueue(): PriorityQueue {
+  if (!_priorityQueue) _priorityQueue = new PriorityQueue();
+  return _priorityQueue;
+}
+
+function getStreamKeepalive(): StreamKeepalive {
+  if (!_streamKeepalive) _streamKeepalive = new StreamKeepalive();
+  return _streamKeepalive;
+}
+
+function getExecutionEngine(): ExecutionEngine {
+  if (!_executionEngine) {
+    const providers = getProvidersSync();
+    _executionEngine = new ExecutionEngine({
+      circuitBreaker: getCircuitBreaker(),
+      cooldown: getCooldown(),
+      fallback: getFallback(),
+      backpressure: getBackpressure(),
+      priorityQueue: getPriorityQueue(),
+      streamKeepalive: getStreamKeepalive(),
+      providerRegistry: providers,
+      config: {},
+    });
+  }
+  return _executionEngine;
+}
+
+function getProvidersSync(): Map<string, ProviderAdapter> {
+  const registry = getProviders();
+  const map = new Map<string, ProviderAdapter>();
+  for (const name of ['ollama', 'gemini', 'groq', 'cerebras', 'sambanova', 'openrouter', 'cloudflare', 'mistral', 'huggingface', 'vercel-gateway', 'openai', 'zen', 'ollama-cloud', 'bytez']) {
+    const p = registry.getProvider(name);
+    if (p) map.set(name, p as unknown as ProviderAdapter);
+  }
+  return map;
 }
 
 let _compression: CompressionEngine | null = null;
