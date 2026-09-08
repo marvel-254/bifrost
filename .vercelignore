@@ -1,27 +1,32 @@
-# Vercel deployment exclusions
-# Keep everything needed for the Next.js monorepo build
+# ── Vercel deployment exclusions ──────────────────────────────────────────
+# Do NOT exclude packages/ — webpack aliases in next.config.js resolve
+# @bifrost/* to packages/*/src, and those source files must be uploaded.
+# Vercel runs pnpm install separately, so node_modules is regenerated.
 
-# Workspace root docs (not needed in deployment)
+# Workspace root docs
 AGENTS.md
 PLAN.md
 README.md
 
-# Database — applied separately, not in deployment bundle
+# Database (applied separately)
 database/
 
-# Tests and docs — not deployed
+# Tests
 tests/
 docs/
 
-# Logs and OS files
-*.log
-.DS_Store
-Thumbs.db
+# Generated artifacts that Vercel regenerates
+.next/
+dist/
 
 # Secrets
 .env*
-!
-.env.example
+!.env.example
 
 # Git
 .git/
+
+# OS files
+.DS_Store
+Thumbs.db
+*.log
