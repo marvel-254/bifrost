@@ -38,6 +38,13 @@ const sidebarData: SidebarGroup[] = [
     { label: 'Google', href: '/docs/providers/google' },
     { label: 'Groq', href: '/docs/providers/groq' },
     { label: 'Mistral', href: '/docs/providers/mistral' },
+    { label: 'Cerebras', href: '/docs/providers/cerebras' },
+    { label: 'SambaNova', href: '/docs/providers/sambanova' },
+    { label: 'OpenRouter', href: '/docs/providers/openrouter' },
+    { label: 'Cloudflare', href: '/docs/providers/cloudflare' },
+    { label: 'HuggingFace', href: '/docs/providers/huggingface' },
+    { label: 'Ollama Cloud', href: '/docs/providers/ollama-cloud' },
+    { label: 'Ollama (Local)', href: '/docs/providers/ollama' },
   ]},
   { title: 'ROUTING', items: [
     { label: 'Auto Routing', href: '/docs/routing' },

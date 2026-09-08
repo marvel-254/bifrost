@@ -88,11 +88,15 @@ function Navbar() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
           <a href="/" aria-label="Bifrost home" style={{ fontSize: 15, fontWeight: 800, color: T.text, letterSpacing: '-0.02em', textDecoration: 'none', fontFamily: T.mono }}>BIFROST</a>
           <div className="nav-links" style={{ display: 'flex', gap: 24 }}>
-            {['Product', 'Developers', 'Docs'].map(item => (
-              <a key={item} href={`#${item.toLowerCase()}`} style={{ fontSize: 13, color: T.muted, textDecoration: 'none', transition: 'color 0.15s' }}
+            {[
+              { label: 'Product', href: '#product' },
+              { label: 'Developers', href: '#developers' },
+              { label: 'Docs', href: '/docs' },
+            ].map(item => (
+              <a key={item.label} href={item.href} style={{ fontSize: 13, color: T.muted, textDecoration: 'none', transition: 'color 0.15s' }}
                 onMouseEnter={e => (e.currentTarget.style.color = T.text)}
                 onMouseLeave={e => (e.currentTarget.style.color = T.muted)}>
-                {item}
+                {item.label}
               </a>
             ))}
           </div>

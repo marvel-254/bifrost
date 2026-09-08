@@ -1,5 +1,5 @@
 import type { ReliabilityConfig, RoutingCandidate } from './types';
-import type { NormalizedRequest, NormalizedResponse, NormalizedStreamEvent, ProviderError } from '@bifrost/shared';
+import type { NormalizedRequest, NormalizedResponse, NormalizedStreamEvent } from '@bifrost/shared';
 import { CircuitBreaker } from './circuit-breaker';
 import { ProviderCooldown } from './cooldown';
 import { AutoFallback } from './fallback';
@@ -37,15 +37,12 @@ export class ExecutionEngine {
 
   async executeWithReliability(req: ExecutionRequest): Promise<NormalizedResponse> {
     const { request, candidates, stream, tenantId } = req;
-    const { circuitBreaker, cooldown, fallback, backpressure, providerRegistry, config } = this.options;
-
-    const fallbackChain = fallback.buildFallbackChain(
-      { code: 'PROVIDER_ERROR', message: 'Initial error', status: 500, provider: '', retryable: true } as ProviderError,
-      candidates
-    );
+    const { circuitBreaker, cooldown, backpressure, providerRegistry, config } = this.options;
 
     let lastError: Error | null = null;
-    for (const candidate of fallbackChain) {
+    let remainingCandidates = [...candidates];
+
+    for (const candidate of remainingCandidates) {
       const providerKey = `provider:${candidate.provider.id}`;
       const modelKey = `model:${candidate.model.id}`;
       const providerModelKey = `provider:model:${candidate.provider.id}:${candidate.model.id}`;
@@ -84,6 +81,12 @@ export class ExecutionEngine {
         lastError = error instanceof Error ? error : new Error(String(error));
         const category = this.categorizeError(lastError);
         cooldown.enterCooldown(providerModelKey, category);
+
+        const fallbackChain = this.options.fallback.buildFallbackChain(
+          { code: 'PROVIDER_ERROR', message: lastError.message, status: 500, provider: candidate.provider.id, retryable: true },
+          remainingCandidates
+        );
+        remainingCandidates = fallbackChain;
       }
     }
 
@@ -92,15 +95,12 @@ export class ExecutionEngine {
 
   async *executeStreamWithReliability(req: ExecutionRequest): AsyncIterable<NormalizedStreamEvent> {
     const { request, candidates, stream, tenantId } = req;
-    const { circuitBreaker, cooldown, fallback, backpressure, providerRegistry, config, streamKeepalive } = this.options;
-
-    const fallbackChain = fallback.buildFallbackChain(
-      { code: 'PROVIDER_ERROR', message: 'Initial error', status: 500, provider: '', retryable: true } as ProviderError,
-      candidates
-    );
+    const { circuitBreaker, cooldown, backpressure, providerRegistry, config, streamKeepalive } = this.options;
 
     let lastError: Error | null = null;
-    for (const candidate of fallbackChain) {
+    let remainingCandidates = [...candidates];
+
+    for (const candidate of remainingCandidates) {
       const providerKey = `provider:${candidate.provider.id}`;
       const modelKey = `model:${candidate.model.id}`;
       const providerModelKey = `provider:model:${candidate.provider.id}:${candidate.model.id}`;
@@ -149,6 +149,12 @@ export class ExecutionEngine {
         lastError = error instanceof Error ? error : new Error(String(error));
         const category = this.categorizeError(lastError);
         cooldown.enterCooldown(providerModelKey, category);
+
+        const fallbackChain = this.options.fallback.buildFallbackChain(
+          { code: 'PROVIDER_ERROR', message: lastError.message, status: 500, provider: candidate.provider.id, retryable: true },
+          remainingCandidates
+        );
+        remainingCandidates = fallbackChain;
       }
     }
 

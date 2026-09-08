@@ -185,5 +185,6 @@ export class BackpressureEngine {
   setConcurrency(key: string, concurrency: number): void {
     const slot = this.getSlot(key);
     slot.concurrency = concurrency;
+    this.processQueue(key);
   }
 }

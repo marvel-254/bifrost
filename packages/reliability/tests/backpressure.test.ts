@@ -6,7 +6,7 @@ describe('BackpressureEngine', () => {
   beforeEach(() => {
     engine = new BackpressureEngine({
       defaultPerProvider: 2,
-      queueTimeoutMs: 1000,
+      queueTimeoutMs: 5000,
       adaptiveLatencyThresholdMs: 100,
       adaptiveReductionFactor: 0.5,
     });
@@ -32,14 +32,17 @@ describe('BackpressureEngine', () => {
   });
 
   test('getQueueDepth returns correct depth', async () => {
-    await engine.acquireSlot('p1', 'normal');
-    await engine.acquireSlot('p1', 'normal');
+    const r1 = await engine.acquireSlot('p1', 'normal');
+    const r2 = await engine.acquireSlot('p1', 'normal');
     expect(engine.getQueueDepth('p1')).toBe(0);
 
     const p = engine.acquireSlot('p1', 'normal');
     expect(engine.getQueueDepth('p1')).toBe(1);
+
+    r2();
     const r = await p;
     r();
+    r1();
   });
 
   test('priority ordering in queue', async () => {

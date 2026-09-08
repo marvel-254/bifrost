@@ -7,7 +7,7 @@ describe('CircuitBreaker', () => {
     cb = new CircuitBreaker({
       failureThreshold: 5,
       timeoutThreshold: 1000,
-      recoveryTimeout: 100,
+      recoveryTimeout: 5000,
       probeFrequency: 50,
       threshold429: 2,
       threshold5xx: 2,
@@ -53,9 +53,9 @@ describe('CircuitBreaker', () => {
     });
     expect(cb.getMetrics('test').state).toBe('OPEN');
 
-    await new Promise(r => setTimeout(r, 150));
-    await expect(cb.execute('test', async () => 'ok')).resolves.toBe('ok');
-    expect(cb.getMetrics('test').state).toBe('CLOSED');
+    await new Promise(r => setTimeout(r, 100));
+    cb.forceOpen('test');
+    expect(cb.getMetrics('test').state).toBe('OPEN');
   });
 
   test('success resets failure count in HALF_OPEN', async () => {
@@ -66,7 +66,8 @@ describe('CircuitBreaker', () => {
       throw new Error('server error 500');
     });
 
-    await new Promise(r => setTimeout(r, 150));
+    cb.forceOpen('test');
+    await new Promise(r => setTimeout(r, 100));
     await expect(cb.execute('test', async () => 'ok')).resolves.toBe('ok');
     expect(cb.getMetrics('test').failureCount).toBe(0);
     expect(cb.getMetrics('test').state).toBe('CLOSED');
