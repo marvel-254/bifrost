@@ -1,6 +1,5 @@
-import type { Metadata } from 'next';
+'use client';
 
-export const metadata: Metadata = { title: 'Groq Provider', description: 'Configure Groq as a Bifrost provider.' };
 
 export default function GroqProviderPage() {
   return (

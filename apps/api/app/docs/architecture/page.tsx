@@ -1,4 +1,5 @@
-
+'use client';
+import Link from 'next/link';
 
 const components = [
   { title: 'Gateway', desc: 'Provider translation and request routing', href: '/docs/api' },

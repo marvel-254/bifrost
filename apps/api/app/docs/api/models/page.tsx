@@ -1,6 +1,5 @@
-import type { Metadata } from 'next';
+'use client';
 
-export const metadata: Metadata = { title: 'Models', description: 'GET /v1/models — list all available models across providers.' };
 
 export default function ModelsPage() {
   return (

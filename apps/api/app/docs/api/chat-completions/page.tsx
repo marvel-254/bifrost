@@ -1,6 +1,5 @@
-import type { Metadata } from 'next';
+'use client';
 
-export const metadata: Metadata = { title: 'Chat Completions', description: 'POST /v1/chat/completions — create chat completions with intelligent routing.' };
 
 export default function ChatCompletionsPage() {
   return (

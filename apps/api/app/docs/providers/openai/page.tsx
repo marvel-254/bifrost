@@ -1,6 +1,5 @@
-import type { Metadata } from 'next';
+'use client';
 
-export const metadata: Metadata = { title: 'OpenAI Provider', description: 'Configure OpenAI as a Bifrost provider.' };
 
 export default function OpenAIProviderPage() {
   return (

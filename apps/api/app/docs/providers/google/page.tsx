@@ -1,6 +1,5 @@
-import type { Metadata } from 'next';
+'use client';
 
-export const metadata: Metadata = { title: 'Google Provider', description: 'Configure Google Gemini as a Bifrost provider.' };
 
 export default function GoogleProviderPage() {
   return (

@@ -1,6 +1,5 @@
-import type { Metadata } from 'next';
+'use client';
 
-export const metadata: Metadata = { title: 'Mistral Provider', description: 'Configure Mistral as a Bifrost provider.' };
 
 export default function MistralProviderPage() {
   return (

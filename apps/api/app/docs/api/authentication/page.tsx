@@ -1,6 +1,5 @@
-import type { Metadata } from 'next';
+'use client';
 
-export const metadata: Metadata = { title: 'Authentication', description: 'How to authenticate with the Bifrost API.' };
 
 export default function AuthPage() {
   return (

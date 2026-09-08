@@ -1,10 +1,5 @@
-import type { Metadata } from 'next';
+'use client';
 import Link from 'next/link';
-
-export const metadata: Metadata = {
-  title: 'Documentation',
-  description: 'Bifrost documentation — learn how to route, optimize, and manage AI requests across multiple providers.',
-};
 
 const pipeline = ['REQUEST', 'OPTIMIZE', 'CACHE', 'ROUTE', 'EXECUTE', 'VALIDATE', 'RECOVER', 'OBSERVE'];
 

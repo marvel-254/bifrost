@@ -1,6 +1,5 @@
-import type { Metadata } from 'next';
+'use client';
 
-export const metadata: Metadata = { title: 'Streaming', description: 'Stream chat completions in real-time.' };
 
 export default function StreamingPage() {
   return (

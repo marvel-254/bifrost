@@ -1,6 +1,5 @@
-import type { Metadata } from 'next';
+'use client';
 
-export const metadata: Metadata = { title: 'Anthropic Provider', description: 'Configure Anthropic as a Bifrost provider.' };
 
 export default function AnthropicProviderPage() {
   return (

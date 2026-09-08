@@ -1,3 +1,4 @@
+'use client';
 import Link from 'next/link';
 
 function CodeBlock({ code, lang = 'typescript', label }: { code: string; lang?: string; label?: string }) {

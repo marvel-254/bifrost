@@ -1,6 +1,5 @@
-import type { Metadata } from 'next';
+'use client';
 
-export const metadata: Metadata = { title: 'Errors', description: 'Bifrost error codes and handling.' };
 
 export default function ErrorsPage() {
   return (
