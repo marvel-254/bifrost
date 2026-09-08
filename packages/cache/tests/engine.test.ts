@@ -245,7 +245,7 @@ describe('CacheEngine', () => {
     const request = createRequest({ tenantId: 'tenant-special' });
     const response = createResponse();
 
-    await tenantEngine.store(request, response);
+    await tenantEngine.storeEntry(request, response);
     const hit = await tenantEngine.lookup(request);
     expect(hit).toBeNull();
   });

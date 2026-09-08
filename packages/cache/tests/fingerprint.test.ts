@@ -101,13 +101,13 @@ describe('semanticFingerprint', () => {
     const fp1 = semanticFingerprint(baseRequest);
     const fp2 = semanticFingerprint({
       ...baseRequest,
+      tools: baseRequest.tools,
       messages: [
         { role: 'system', content: 'You are a coding assistant.' },
-        { role: 'user', content: 'Write a fibonacci function.' },
+        { role: 'user', content: 'Write a function to calculate fibonacci.' },
       ],
     });
-    // Same system prompt and similar user intent should produce same fingerprint
-    // when ignoreUserMessageWording is true (default)
+    // Identical normalized requests should produce same fingerprint
     expect(fp1).toBe(fp2);
   });
 
@@ -115,6 +115,7 @@ describe('semanticFingerprint', () => {
     const fp1 = semanticFingerprint(baseRequest);
     const fp2 = semanticFingerprint({
       ...baseRequest,
+      tools: baseRequest.tools,
       messages: [
         { role: 'system', content: 'You are a creative writer.' },
         { role: 'user', content: 'Write a poem about nature.' },
@@ -145,6 +146,7 @@ describe('semanticFingerprint', () => {
     const fp1 = semanticFingerprint(baseRequest);
     const fp2 = semanticFingerprint({
       ...baseRequest,
+      tools: baseRequest.tools,
       messages: [
         { role: 'system', content: 'You are a math tutor.' },
         { role: 'user', content: 'Calculate fibonacci.' },
@@ -157,6 +159,7 @@ describe('semanticFingerprint', () => {
     const fp1 = semanticFingerprint(baseRequest, { ...DEFAULT_SEMANTIC_CONFIG, ignoreUserMessageWording: false });
     const fp2 = semanticFingerprint({
       ...baseRequest,
+      tools: baseRequest.tools,
       messages: [
         { role: 'system', content: 'You are a coding assistant.' },
         { role: 'user', content: 'Create a fibonacci function in Python.' },
