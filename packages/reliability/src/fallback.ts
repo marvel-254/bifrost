@@ -13,7 +13,7 @@ interface ProviderErrorLike {
 }
 
 function isTransient(error: ProviderErrorLike): boolean {
-  return error.retryable && ['RATE_LIMIT', 'SERVER_ERROR', 'TIMEOUT', 'ROUTING_FAILURE'].includes(error.code);
+  return error.retryable && ['RATE_LIMIT', 'SERVER_ERROR', 'TIMEOUT', 'ROUTING_FAILURE', 'CONTEXT_TOO_LARGE', 'UNSUPPORTED_TOOL'].includes(error.code);
 }
 
 function categorizeError(error: ProviderErrorLike): FallbackStrategy | null {
@@ -33,12 +33,12 @@ function categorizeError(error: ProviderErrorLike): FallbackStrategy | null {
   }
 }
 
-function rotateAccount(candidates: RoutingCandidate[]): RoutingCandidate[] {
+function rotateAccount(candidates: RoutingCandidate[], errorProvider: string): RoutingCandidate[] {
   const seen = new Set<string>();
   const ordered: RoutingCandidate[] = [];
   for (const c of candidates) {
     const key = `${c.provider.id}:${c.model.provider}`;
-    if (!seen.has(key)) {
+    if (!seen.has(key) && c.provider.id !== errorProvider) {
       seen.add(key);
       ordered.push(c);
     }
@@ -46,11 +46,11 @@ function rotateAccount(candidates: RoutingCandidate[]): RoutingCandidate[] {
   return ordered;
 }
 
-function alternateProvider(candidates: RoutingCandidate[]): RoutingCandidate[] {
+function alternateProvider(candidates: RoutingCandidate[], errorProvider: string): RoutingCandidate[] {
   const seen = new Set<string>();
   const ordered: RoutingCandidate[] = [];
   for (const c of candidates) {
-    if (!seen.has(c.provider.id)) {
+    if (!seen.has(c.provider.id) && c.provider.id !== errorProvider) {
       seen.add(c.provider.id);
       ordered.push(c);
     }
@@ -92,10 +92,10 @@ export class AutoFallback {
     let ordered: RoutingCandidate[] = [];
     switch (strategy) {
       case 'rotate_account':
-        ordered = rotateAccount(candidates);
+        ordered = rotateAccount(candidates, error.provider);
         break;
       case 'alternate_provider':
-        ordered = alternateProvider(candidates);
+        ordered = alternateProvider(candidates, error.provider);
         break;
       case 'larger_context_model':
         ordered = largerContextModel(candidates);

@@ -35,7 +35,7 @@ export class SelfHealing {
 
   async monitorHealth(probeFn: (key: string) => Promise<boolean>): Promise<void> {
     for (const [key, record] of this.records) {
-      if (record.state === 'quarantined') {
+      if (record.state === 'disabled') {
         const recovered = await this.testRecovery(key, probeFn);
         if (recovered) {
           this.restoreProvider(key);
@@ -47,12 +47,16 @@ export class SelfHealing {
   recordSuccess(key: string, latencyMs: number): void {
     const record = this.getOrCreateRecord(key);
     record.lastSuccess = Date.now();
+    record.successRate = 1.0;
+    record.errorRate = 0;
     this.updateHealthState(record);
   }
 
   recordFailure(key: string, latencyMs: number): void {
     const record = this.getOrCreateRecord(key);
     record.lastFailure = Date.now();
+    record.successRate = 0;
+    record.errorRate = 1.0;
     this.updateHealthState(record);
   }
 
@@ -82,8 +86,6 @@ export class SelfHealing {
       this.quarantineProvider(record.key, 'success_rate_critical');
       return;
     }
-
-    if (record.state === 'quarantined') return;
 
     if (record.successRate < this.thresholds.degradedSuccessRate || record.errorRate > this.thresholds.errorRateIncrease) {
       if (record.state !== 'degraded') {
@@ -137,11 +139,13 @@ export class SelfHealing {
 
   isHealthy(key: string): boolean {
     const record = this.records.get(key);
-    return record?.state === 'healthy';
+    if (!record) return true;
+    return record.state === 'healthy';
   }
 
   isQuarantined(key: string): boolean {
     const record = this.records.get(key);
-    return record?.state === 'disabled';
+    if (!record) return false;
+    return record.state === 'disabled';
   }
 }

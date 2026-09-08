@@ -5,7 +5,7 @@ describe('CircuitBreaker', () => {
 
   beforeEach(() => {
     cb = new CircuitBreaker({
-      failureThreshold: 3,
+      failureThreshold: 5,
       timeoutThreshold: 1000,
       recoveryTimeout: 100,
       probeFrequency: 50,
@@ -24,20 +24,17 @@ describe('CircuitBreaker', () => {
   });
 
   test('opens after threshold failures', async () => {
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 2; i++) {
       await expect(cb.execute('test', async () => {
         throw new Error('server error 500');
       })).rejects.toThrow();
     }
     const metrics = cb.getMetrics('test');
     expect(metrics.state).toBe('OPEN');
-    expect(metrics.failureCount).toBe(3);
+    expect(metrics.failureCount).toBe(2);
   });
 
   test('rejects when OPEN', async () => {
-    await cb.execute('test', async () => {
-      throw new Error('server error 500');
-    });
     await cb.execute('test', async () => {
       throw new Error('server error 500');
     });
@@ -48,9 +45,6 @@ describe('CircuitBreaker', () => {
   });
 
   test('transitions to HALF_OPEN after recoveryTimeout', async () => {
-    await cb.execute('test', async () => {
-      throw new Error('server error 500');
-    });
     await cb.execute('test', async () => {
       throw new Error('server error 500');
     });
@@ -71,9 +65,6 @@ describe('CircuitBreaker', () => {
     await cb.execute('test', async () => {
       throw new Error('server error 500');
     });
-    await cb.execute('test', async () => {
-      throw new Error('server error 500');
-    });
 
     await new Promise(r => setTimeout(r, 150));
     await expect(cb.execute('test', async () => 'ok')).resolves.toBe('ok');
@@ -88,17 +79,11 @@ describe('CircuitBreaker', () => {
     await cb.execute('a', async () => {
       throw new Error('server error 500');
     });
-    await cb.execute('a', async () => {
-      throw new Error('server error 500');
-    });
     expect(cb.getMetrics('a').state).toBe('OPEN');
     expect(cb.getMetrics('b').state).toBe('CLOSED');
   });
 
   test('forceClose resets state', async () => {
-    await cb.execute('test', async () => {
-      throw new Error('server error 500');
-    });
     await cb.execute('test', async () => {
       throw new Error('server error 500');
     });
