@@ -3,5 +3,6 @@ module.exports = {
   projects: [
     '<rootDir>/packages/models',
     '<rootDir>/packages/providers',
+    '<rootDir>/packages/reliability',
   ],
 };
