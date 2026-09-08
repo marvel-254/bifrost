@@ -26,6 +26,9 @@ export class ProviderRegistry {
       for (const p of config.providers) {
         if (p.enabled) {
           this.providerOrder.push(p.name);
+          // Seed the providers map with a placeholder so
+          // listProviders() reflects the configured set.
+          this.providers.set(p.name, null as unknown as IProvider);
         }
       }
     }

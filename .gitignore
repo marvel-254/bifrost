@@ -9,3 +9,4 @@ coverage
 *.tsbuildinfo
 .next
 *.nft.json
+.vercel

@@ -64,34 +64,6 @@ importers:
         specifier: ^5.6.0
         version: 5.9.3
 
-  apps/web:
-    dependencies:
-      '@bifrost/shared':
-        specifier: workspace:*
-        version: link:../../packages/shared
-      next:
-        specifier: ^15.1.0
-        version: 15.5.25(@babel/core@7.29.7)(@types/node@22.20.1)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      react:
-        specifier: ^19.0.0
-        version: 19.2.8
-      react-dom:
-        specifier: ^19.0.0
-        version: 19.2.8(react@19.2.8)
-    devDependencies:
-      '@types/node':
-        specifier: ^22.0.0
-        version: 22.20.1
-      '@types/react':
-        specifier: ^19.0.0
-        version: 19.2.18
-      '@types/react-dom':
-        specifier: ^19.0.0
-        version: 19.2.7(@types/react@19.2.18)
-      typescript:
-        specifier: ^5.6.0
-        version: 5.9.3
-
   packages/models:
     dependencies:
       '@bifrost/shared':
@@ -133,6 +105,25 @@ importers:
         specifier: ^5.6.0
         version: 5.9.3
 
+  packages/router:
+    dependencies:
+      '@bifrost/models':
+        specifier: workspace:*
+        version: link:../models
+      '@bifrost/providers':
+        specifier: workspace:*
+        version: link:../providers
+      '@bifrost/shared':
+        specifier: workspace:*
+        version: link:../shared
+    devDependencies:
+      '@types/node':
+        specifier: ^22.0.0
+        version: 22.20.1
+      typescript:
+        specifier: ^5.6.0
+        version: 5.9.3
+
   packages/shared:
     dependencies:
       '@types/jest':
@@ -145,6 +136,19 @@ importers:
         specifier: ^29.7.0
         version: 29.7.0(@types/node@22.20.1)
     devDependencies:
+      typescript:
+        specifier: ^5.6.0
+        version: 5.9.3
+
+  packages/storage:
+    dependencies:
+      '@bifrost/shared':
+        specifier: workspace:*
+        version: link:../shared
+    devDependencies:
+      '@types/node':
+        specifier: ^22.0.0
+        version: 22.20.1
       typescript:
         specifier: ^5.6.0
         version: 5.9.3

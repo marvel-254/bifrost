@@ -1,2 +1,2 @@
-export { ModelRegistry } from './registry.js';
-export type { Model, ModelConfig } from './types.js';
+export { ModelRegistry } from './registry';
+export type { Model, ModelConfig } from './types';

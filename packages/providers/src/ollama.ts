@@ -212,7 +212,7 @@ export class OllamaProvider implements IProvider {
   private inferCapabilities(modelName: string): string[] {
     const name = modelName.toLowerCase();
     const caps: string[] = ['chat', 'completion'];
-    if (name.includes('vision') || name.includes('vl') || name.includes('gemma 3')) caps.push('vision');
+    if (name.includes('vision') || name.includes('vl') || name.includes('llava') || name.includes('gemma 3')) caps.push('vision');
     if (name.includes('tool') || name.includes('function') || name.includes('agent')) caps.push('tool_use');
     return caps;
   }
