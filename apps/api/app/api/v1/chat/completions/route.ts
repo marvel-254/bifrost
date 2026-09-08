@@ -280,11 +280,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   // When a specific model is requested, go direct. When "auto", use router.
   let providerName = model.provider;
   let selectedModelId = modelId;
+  let candidates: RoutingCandidate[] = [];
 
   if (modelId === 'auto') {
     const registry = await getProviders();
     const allModels = models.listModels();
-    const candidates = buildCandidates(models, registry, { includeDisabled: false });
+    const builtCandidates = buildCandidates(models, registry, { includeDisabled: false });
 
     const routingMode = (body.strategy as string) || 'balanced';
     const strategy = {
@@ -303,17 +304,30 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       },
     };
 
-    const decision = route(normalizedRequest, strategy, candidates);
+    const decision = route(normalizedRequest, strategy, builtCandidates);
     if (!decision.primary) {
       return NextResponse.json({ error: { message: 'No eligible model for request', type: 'routing_error' } }, { status: 404 });
     }
     providerName = decision.primary.provider.id;
     selectedModelId = decision.primary.model.id;
+    candidates = [decision.primary, ...decision.fallbacks];
+  } else {
+    const registry = await getProviders();
+    const provider = registry.getProvider(model.provider);
+    if (!provider) {
+      return NextResponse.json({ error: { message: `Provider '${model.provider}' not registered`, type: 'internal_error' } }, { status: 501 });
+    }
+    candidates = [{
+      model: { id: model.id, provider: model.provider, displayName: model.displayName, contextWindow: model.contextWindow, capabilities: model.capabilities, inputPrice: model.inputPrice, outputPrice: model.outputPrice, enabled: model.enabled },
+      provider: { id: provider.name, name: provider.name, enabled: true },
+      qualityScore: 1,
+      costScore: 1,
+      latencyScore: 1,
+      reliabilityScore: 1,
+      availabilityScore: 1,
+      priority: 1,
+    }];
   }
-
-  const registry = await getProviders();
-  const provider = registry.getProvider(providerName);
-  if (!provider) return NextResponse.json({ error: { message: `Provider '${providerName}' not registered`, type: 'internal_error' } }, { status: 501 });
 
   let optimizedMessages = messages;
   try {
@@ -337,9 +351,21 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // Compression is best-effort; proceed with original messages on failure.
   }
 
-  const requestPayload: Record<string, unknown> = { model: selectedModelId, messages: optimizedMessages, temperature, max_tokens: maxTokens };
-  if (body.tools) requestPayload.tools = body.tools;
-  if (body.tool_choice) requestPayload.tool_choice = body.tool_choice;
+  const requestPayload: NormalizedRequest = {
+    model: selectedModelId,
+    messages: optimizedMessages as NormalizedMessage[],
+    temperature,
+    top_p: body.top_p as number | undefined,
+    max_tokens: maxTokens,
+    stream,
+    stop: body.stop as string | string[] | undefined,
+    tools: body.tools as any,
+    tool_choice: body.tool_choice as any,
+    user: body.user as string | undefined,
+    metadata: body.metadata as Record<string, unknown> | undefined,
+  };
+
+  const executionEngine = getExecutionEngine();
 
   // ── Non-streaming ─────────────────────────────────────────────────────
   if (!stream) {
@@ -348,7 +374,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const timeout = setTimeout(() => controller.abort(), timeoutMs);
     try {
       const start = Date.now();
-      const result = await provider.complete(requestPayload);
+      const result = await executionEngine.executeWithReliability({
+        request: requestPayload,
+        candidates,
+        stream: false,
+      });
       const latencyMs = Date.now() - start;
       clearTimeout(timeout);
 
@@ -382,9 +412,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     async start(rsController) {
       rsController.enqueue(encoder.encode(`data: ${JSON.stringify({ id, object: 'chat.completion.chunk', created, model: selectedModelId, choices: [{ index: 0, delta: { role: 'assistant' }, finish_reason: null }] })}\n\n`));
       try {
-        await provider.stream(requestPayload, async (chunk) => {
-          rsController.enqueue(encoder.encode(`data: ${JSON.stringify(chunk)}\n\n`));
+        const streamIterator = executionEngine.executeStreamWithReliability({
+          request: requestPayload,
+          candidates,
+          stream: true,
         });
+        for await (const chunk of streamIterator) {
+          rsController.enqueue(encoder.encode(`data: ${JSON.stringify(chunk)}\n\n`));
+        }
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Stream error';
         rsController.enqueue(encoder.encode(`data: ${JSON.stringify({ id, object: 'chat.completion.chunk', created, model: selectedModelId, choices: [{ index: 0, delta: {}, finish_reason: 'stop' }], error: { message, type: 'provider_error' } })}\n\n`));

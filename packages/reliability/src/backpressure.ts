@@ -16,6 +16,7 @@ interface QueuedRequest {
   resolve: (release: ReleaseFn) => void;
   reject: (error: Error) => void;
   enqueuedAt: number;
+  timeout: ReturnType<typeof setTimeout>;
 }
 
 const PRIORITY_ORDER: Priority[] = ['critical', 'high', 'normal', 'low', 'background'];
@@ -109,26 +110,27 @@ export class BackpressureEngine {
       }
 
       const queue = this.queues.get(key) ?? [];
-      queue.push({
-        priority,
-        resolve,
-        reject,
-        enqueuedAt: Date.now(),
-      });
-      queue.sort((a, b) => PRIORITY_ORDER.indexOf(a.priority) - PRIORITY_ORDER.indexOf(b.priority));
-      this.queues.set(key, queue);
-
       const timeout = setTimeout(() => {
         const idx = queue.findIndex(r => r.resolve === resolve);
         if (idx >= 0) queue.splice(idx, 1);
         reject(new Error(`Backpressure queue timeout for ${key}`));
       }, this.config.queueTimeoutMs);
 
-      const originalResolve = resolve;
-      resolve = (release: ReleaseFn) => {
-        clearTimeout(timeout);
-        originalResolve(release);
-      };
+      queue.push({
+        priority,
+        resolve: (release: ReleaseFn) => {
+          clearTimeout(timeout);
+          resolve(release);
+        },
+        reject: (error: Error) => {
+          clearTimeout(timeout);
+          reject(error);
+        },
+        enqueuedAt: Date.now(),
+        timeout,
+      });
+      queue.sort((a, b) => PRIORITY_ORDER.indexOf(a.priority) - PRIORITY_ORDER.indexOf(b.priority));
+      this.queues.set(key, queue);
     });
   }
 

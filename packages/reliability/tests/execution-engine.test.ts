@@ -3,7 +3,7 @@ import { CircuitBreaker } from '../src/circuit-breaker';
 import { ProviderCooldown } from '../src/cooldown';
 import { AutoFallback } from '../src/fallback';
 import { BackpressureEngine } from '../src/backpressure';
-import { PriorityQueue } from '../src/stream-keepalive';
+import { PriorityQueue } from '../src/priority-queue';
 import { StreamKeepalive } from '../src/stream-keepalive';
 import type { NormalizedRequest, NormalizedResponse, NormalizedStreamEvent } from '@bifrost/shared';
 import type { RoutingCandidate, ReliabilityConfig } from '../src/types';

@@ -1,24 +1,32 @@
-import type { FallbackConfig, FallbackStrategy, ProviderError, RoutingCandidate } from './types';
+import type { FallbackConfig, FallbackStrategy, RoutingCandidate } from './types';
 
 const DEFAULT_CONFIG: FallbackConfig = {
   maxAttempts: 3,
 };
 
-function isTransient(error: ProviderError): boolean {
-  return error.retryable && ['rate_limit', 'server_error', 'timeout', 'routing_failure'].includes(error.code);
+interface ProviderErrorLike {
+  code: string;
+  message: string;
+  status: number;
+  provider: string;
+  retryable: boolean;
 }
 
-function categorizeError(error: ProviderError): FallbackStrategy | null {
+function isTransient(error: ProviderErrorLike): boolean {
+  return error.retryable && ['RATE_LIMIT', 'SERVER_ERROR', 'TIMEOUT', 'ROUTING_FAILURE'].includes(error.code);
+}
+
+function categorizeError(error: ProviderErrorLike): FallbackStrategy | null {
   switch (error.code) {
-    case 'rate_limit':
+    case 'RATE_LIMIT':
       return 'rotate_account';
-    case 'timeout':
+    case 'TIMEOUT':
       return 'alternate_provider';
-    case 'context_too_large':
+    case 'CONTEXT_TOO_LARGE':
       return 'larger_context_model';
-    case 'unsupported_tool':
+    case 'UNSUPPORTED_TOOL':
       return 'capability_compatible_model';
-    case 'server_error':
+    case 'SERVER_ERROR':
       return 'retry';
     default:
       return null;
@@ -71,7 +79,7 @@ export class AutoFallback {
     this.config = { ...DEFAULT_CONFIG, ...config };
   }
 
-  buildFallbackChain(error: ProviderError, candidates: RoutingCandidate[]): RoutingCandidate[] {
+  buildFallbackChain(error: ProviderErrorLike, candidates: RoutingCandidate[]): RoutingCandidate[] {
     if (!isTransient(error)) {
       return [];
     }
@@ -112,7 +120,7 @@ export class AutoFallback {
     return ordered.slice(0, this.config.maxAttempts);
   }
 
-  shouldRetry(error: ProviderError, attempt: number): boolean {
+  shouldRetry(error: ProviderErrorLike, attempt: number): boolean {
     if (attempt >= this.config.maxAttempts) return false;
     return isTransient(error);
   }

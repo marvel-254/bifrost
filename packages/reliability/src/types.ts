@@ -116,7 +116,7 @@ export interface RoutingCandidate {
 
 // ── Self-Healing ──────────────────────────────────────────────────────────────
 
-export type HealthState = 'healthy' | 'degraded' | 'unhealthy' | 'disabled';
+export type HealthState = 'healthy' | 'degraded' | 'unhealthy' | 'disabled' | 'quarantined';
 
 export interface HealthThresholds {
   successRateDrop: number;
