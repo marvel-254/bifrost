@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // API routes are serverless functions on Vercel
-  // Type checking is done separately via `pnpm typecheck`
+  // Both API routes and dashboard share this Next.js app
+  // Type checking done separately via `pnpm typecheck`
   typescript: {
     ignoreBuildErrors: true,
   },

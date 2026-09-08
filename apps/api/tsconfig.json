@@ -4,21 +4,12 @@
     "allowJs": true,
     "noEmit": true,
     "jsx": "preserve",
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "plugins": [{ "name": "next" }],
     "paths": {
-      "@bifrost/shared": [
-        "../../packages/shared/src"
-      ],
-      "@bifrost/models": [
-        "../../packages/models/src"
-      ],
-      "@bifrost/providers": [
-        "../../packages/providers/src"
-      ]
+      "@bifrost/shared": ["../../packages/shared/src"],
+      "@bifrost/models": ["../../packages/models/src"],
+      "@bifrost/providers": ["../../packages/providers/src"]
     },
     "incremental": true
   },
@@ -28,8 +19,5 @@
     "**/*.tsx",
     ".next/types/**/*.ts"
   ],
-  "exclude": [
-    "node_modules",
-    "dist"
-  ]
+  "exclude": ["node_modules", "dist"]
 }
