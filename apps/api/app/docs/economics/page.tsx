@@ -1,6 +1,3 @@
-import type { Metadata } from 'next';
-
-export const metadata: Metadata = { title: 'Cost & Quotas', description: 'Cost optimization, quota forecasting, and spend guardrails.' };
 
 export default function EconomicsPage() {
   return (

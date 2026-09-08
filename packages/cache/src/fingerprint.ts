@@ -27,7 +27,10 @@ function hashString(input: string): string {
 }
 
 function hashObject(obj: unknown): string {
-  return hashString(JSON.stringify(obj, Object.keys(obj).sort()));
+  if (obj === null || typeof obj !== 'object') {
+    return hashString(String(obj));
+  }
+  return hashString(JSON.stringify(obj, Object.keys(obj as object).sort()));
 }
 
 export function exactFingerprint(request: NormalizedRequestForCache): string {

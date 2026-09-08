@@ -1,6 +1,3 @@
-import type { Metadata } from 'next';
-
-export const metadata: Metadata = { title: 'API Overview', description: 'Bifrost API reference — OpenAI-compatible endpoints for chat completions, models, and more.' };
 
 export default function ApiPage() {
   return (

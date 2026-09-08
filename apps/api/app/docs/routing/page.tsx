@@ -1,6 +1,3 @@
-import type { Metadata } from 'next';
-
-export const metadata: Metadata = { title: 'Auto Routing', description: 'How Bifrost automatically selects the best model and provider.' };
 
 export default function RoutingPage() {
   return (

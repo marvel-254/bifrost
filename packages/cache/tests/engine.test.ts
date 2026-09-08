@@ -48,7 +48,7 @@ describe('CacheEngine', () => {
     const request = createRequest();
     const response = createResponse();
 
-    await engine.store(request, response);
+    await engine.storeEntry(request, response);
     const hit = await engine.lookup(request);
 
     expect(hit).not.toBeNull();
@@ -60,7 +60,7 @@ describe('CacheEngine', () => {
     const request = createRequest();
     const response = createResponse();
 
-    await engine.store(request, response);
+    await engine.storeEntry(request, response);
     await engine.lookup(request);
     await engine.lookup(request);
 
@@ -84,7 +84,7 @@ describe('CacheEngine', () => {
     const request2 = createRequest({ messages: [{ role: 'user', content: 'Create a fibonacci function in Python.' }] });
     const response = createResponse();
 
-    await engine.store(request1, response);
+    await engine.storeEntry(request1, response);
     const hit = await engine.lookup(request2);
 
     expect(hit).not.toBeNull();
@@ -96,7 +96,7 @@ describe('CacheEngine', () => {
     const request2 = createRequest({ messages: [{ role: 'user', content: 'Create a fibonacci function in Python.' }] });
     const response = createResponse();
 
-    await engine.store(request1, response);
+    await engine.storeEntry(request1, response);
     await engine.lookup(request2);
 
     const stats = engine.getStats();
@@ -116,7 +116,7 @@ describe('CacheEngine', () => {
     const request2 = createRequest({ messages: [{ role: 'user', content: 'Create a fibonacci function in Python.' }] });
     const response = createResponse();
 
-    await engineNoSemantic.store(request1, response);
+    await engineNoSemantic.storeEntry(request1, response);
     const hit = await engineNoSemantic.lookup(request2);
 
     expect(hit).toBeNull();
@@ -127,7 +127,7 @@ describe('CacheEngine', () => {
     const request2 = createRequest({ tenantId: 'tenant-2', messages: [{ role: 'user', content: 'Hello' }] });
     const response = createResponse();
 
-    await engine.store(request1, response);
+    await engine.storeEntry(request1, response);
     const hit = await engine.lookup(request2);
 
     expect(hit).toBeNull();
@@ -138,7 +138,7 @@ describe('CacheEngine', () => {
     const request2 = createRequest({ model: 'anthropic/claude-3', messages: [{ role: 'user', content: 'Hello' }] });
     const response = createResponse({ model: 'openai/gpt-4o' });
 
-    await engine.store(request1, response);
+    await engine.storeEntry(request1, response);
     const hit = await engine.lookup(request2);
 
     expect(hit).toBeNull();
@@ -154,7 +154,7 @@ describe('CacheEngine', () => {
     const request = createRequest();
     const response = createResponse();
 
-    await shortTtlEngine.store(request, response);
+    await shortTtlEngine.storeEntry(request, response);
     const hit = await shortTtlEngine.lookup(request);
 
     expect(hit).toBeNull();
@@ -165,8 +165,8 @@ describe('CacheEngine', () => {
     const request2 = createRequest({ tenantId: 'tenant-1', model: 'anthropic/claude-3' });
     const response = createResponse();
 
-    await engine.store(request1, response);
-    await engine.store(request2, response);
+    await engine.storeEntry(request1, response);
+    await engine.storeEntry(request2, response);
 
     const count = await engine.invalidate('cache:tenant-1:.*');
     expect(count).toBe(2);
@@ -182,8 +182,8 @@ describe('CacheEngine', () => {
     const request2 = createRequest({ tenantId: 'tenant-2' });
     const response = createResponse();
 
-    await engine.store(request1, response);
-    await engine.store(request2, response);
+    await engine.storeEntry(request1, response);
+    await engine.storeEntry(request2, response);
 
     const count = await engine.invalidateTenant('tenant-1');
     expect(count).toBe(1);
@@ -197,8 +197,8 @@ describe('CacheEngine', () => {
     const request2 = createRequest({ model: 'anthropic/claude-3' });
     const response = createResponse();
 
-    await engine.store(request1, response);
-    await engine.store(request2, response);
+    await engine.storeEntry(request1, response);
+    await engine.storeEntry(request2, response);
 
     const count = await engine.invalidateModel('openai/gpt-4o');
     expect(count).toBe(1);
@@ -211,7 +211,7 @@ describe('CacheEngine', () => {
     const request = createRequest();
     const response = createResponse();
 
-    await engine.store(request, response);
+    await engine.storeEntry(request, response);
     await engine.lookup(request);
     await engine.lookup(request);
     await engine.lookup(createRequest({ messages: [{ role: 'user', content: 'Different' }] }));
@@ -224,7 +224,7 @@ describe('CacheEngine', () => {
     const request = createRequest();
     const response = createResponse();
 
-    await engine.store(request, response);
+    await engine.storeEntry(request, response);
     await engine.lookup(request);
     engine.resetStats();
 

@@ -1,6 +1,3 @@
-import type { Metadata } from 'next';
-
-export const metadata: Metadata = { title: 'Concepts', description: 'Core concepts behind Bifrost.' };
 
 export default function ConceptsPage() {
   return (

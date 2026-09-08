@@ -69,11 +69,27 @@ export class InMemoryCacheStore implements CacheStore {
 
   private evictIfNeeded(): void {
     while (
-      (this.maxEntries > 0 && this.map.size >= this.maxEntries) ||
+      (this.maxEntries > 0 && this.map.size > this.maxEntries) ||
       (this.maxSizeBytes > 0 && this.currentSizeBytes >= this.maxSizeBytes)
     ) {
       if (!this.tail) break;
-      const victim = this.tail;
+      
+      let victim: CacheNode;
+      if (this.evictionPolicy === 'LFU') {
+        // Find the least frequently used node
+        victim = this.tail;
+        let current = this.head;
+        while (current) {
+          if (current.accessCount < victim.accessCount) {
+            victim = current;
+          }
+          current = current.next;
+        }
+      } else {
+        // LRU: victim is the tail (least recently used)
+        victim = this.tail;
+      }
+      
       this.removeNode(victim);
       this.map.delete(victim.key);
       this.currentSizeBytes -= victim.sizeBytes;
@@ -93,6 +109,7 @@ export class InMemoryCacheStore implements CacheStore {
     }
 
     node.accessCount++;
+    node.entry.hitCount++;
     node.lastAccessed = now;
 
     if (this.evictionPolicy === 'LRU') {

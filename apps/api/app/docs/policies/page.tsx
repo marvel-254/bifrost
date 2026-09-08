@@ -1,6 +1,3 @@
-import type { Metadata } from 'next';
-
-export const metadata: Metadata = { title: 'Policy-as-Code', description: 'Enforce policies, budgets, and constraints at the gateway layer.' };
 
 export default function PoliciesPage() {
   return (

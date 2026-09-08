@@ -1,6 +1,3 @@
-import type { Metadata } from 'next';
-
-export const metadata: Metadata = {
   title: 'Quickstart',
   description: 'Connect Bifrost to your application in minutes.',
 };

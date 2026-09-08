@@ -98,7 +98,7 @@ export class CacheEngine {
     return null;
   }
 
-  async store(
+  async storeEntry(
     request: NormalizedRequestForCache,
     response: NormalizedResponse
   ): Promise<void> {

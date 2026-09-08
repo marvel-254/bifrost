@@ -103,9 +103,11 @@ describe('semanticFingerprint', () => {
       ...baseRequest,
       messages: [
         { role: 'system', content: 'You are a coding assistant.' },
-        { role: 'user', content: 'Create a fibonacci function in Python.' },
+        { role: 'user', content: 'Write a fibonacci function.' },
       ],
     });
+    // Same system prompt and similar user intent should produce same fingerprint
+    // when ignoreUserMessageWording is true (default)
     expect(fp1).toBe(fp2);
   });
 

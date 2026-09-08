@@ -1,6 +1,3 @@
-import type { Metadata } from 'next';
-
-export const metadata: Metadata = { title: 'Optimization', description: 'Prompt compression, caching, and context optimization.' };
 
 export default function OptimizationPage() {
   return (

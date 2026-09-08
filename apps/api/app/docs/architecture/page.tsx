@@ -1,7 +1,4 @@
-import type { Metadata } from 'next';
-import Link from 'next/link';
 
-export const metadata: Metadata = { title: 'Architecture', description: 'Bifrost system architecture and components.' };
 
 const components = [
   { title: 'Gateway', desc: 'Provider translation and request routing', href: '/docs/api' },

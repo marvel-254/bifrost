@@ -1,5 +1,6 @@
 import type { NormalizedRequest, NormalizedMessage, ChatTool } from '@bifrost/shared';
 import type { NormalizedRequestForCache } from './types';
+export type { NormalizedRequestForCache } from './types';
 
 const MODEL_ALIASES: Record<string, string> = {
   'gpt-4o': 'openai/gpt-4o',

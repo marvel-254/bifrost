@@ -1,6 +1,3 @@
-import type { Metadata } from 'next';
-
-export const metadata: Metadata = { title: 'Observability', description: 'Request tracing, metrics, and monitoring.' };
 
 export default function ObservabilityPage() {
   return (

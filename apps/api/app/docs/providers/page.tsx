@@ -1,9 +1,3 @@
-import type { Metadata } from 'next';
-import Link from 'next/link';
-
-export const metadata: Metadata = { title: 'Providers', description: 'Configure and manage AI model providers.' };
-
-const providers = [
   { id: 'openai', name: 'OpenAI', status: 'operational', models: ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo'], capabilities: ['Text', 'Vision', 'Tools', 'Streaming', 'Structured Output'] },
   { id: 'anthropic', name: 'Anthropic', status: 'operational', models: ['claude-sonnet-4', 'claude-opus-4'], capabilities: ['Text', 'Vision', 'Tools', 'Streaming'] },
   { id: 'google', name: 'Google', status: 'operational', models: ['gemini-2.5-pro', 'gemini-2.5-flash'], capabilities: ['Text', 'Vision', 'Tools', 'Streaming'] },

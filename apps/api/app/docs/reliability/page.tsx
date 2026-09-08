@@ -1,6 +1,3 @@
-import type { Metadata } from 'next';
-
-export const metadata: Metadata = { title: 'Reliability', description: 'Automatic fallback, circuit breakers, and self-healing.' };
 
 export default function ReliabilityPage() {
   return (
