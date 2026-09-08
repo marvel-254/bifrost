@@ -5,6 +5,8 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  // Standalone output for Vercel serverless deployment
+  output: 'standalone',
 };
 
 export default nextConfig;
