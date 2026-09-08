@@ -74,21 +74,19 @@ export class InMemoryCacheStore implements CacheStore {
     ) {
       if (!this.tail) break;
       
-      let victim: CacheNode;
+      let victim: CacheNode = this.tail!;
       if (this.evictionPolicy === 'LFU') {
-        // Find the least frequently used node
-        victim = this.tail;
-        let current = this.head;
+        // Find the least frequently used node, scanning from tail (oldest) to head (newest)
+        // to prefer evicting older entries in case of frequency ties
+        let current: CacheNode | null = this.tail;
         while (current) {
           if (current.accessCount < victim.accessCount) {
             victim = current;
           }
-          current = current.next;
+          current = current.prev;
         }
-      } else {
-        // LRU: victim is the tail (least recently used)
-        victim = this.tail;
       }
+      // LRU: victim is already the tail
       
       this.removeNode(victim);
       this.map.delete(victim.key);

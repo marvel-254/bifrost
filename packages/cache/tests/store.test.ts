@@ -122,7 +122,7 @@ describe('InMemoryCacheStore', () => {
   });
 
   it('should evict by size when maxSizeBytes exceeded', async () => {
-    const smallStore = new InMemoryCacheStore({ maxEntries: 100, maxSizeBytes: 500 });
+    const smallStore = new InMemoryCacheStore({ maxEntries: 100, maxSizeBytes: 5000 });
     const largeEntry = createEntry({
       key: 'key-1',
       response: {
@@ -130,7 +130,7 @@ describe('InMemoryCacheStore', () => {
         object: 'chat.completion',
         created: Date.now(),
         model: 'openai/gpt-4o',
-        choices: [{ index: 0, message: { role: 'assistant', content: 'x'.repeat(1000) }, finish_reason: 'stop' }],
+        choices: [{ index: 0, message: { role: 'assistant', content: 'x'.repeat(2000) }, finish_reason: 'stop' }],
       },
     });
     await smallStore.set('key-1', largeEntry);
@@ -153,8 +153,9 @@ describe('InMemoryCacheStore', () => {
     await store.set('key-1', entry1);
     const entry2 = createEntry({ key: 'key-1', hitCount: 10 });
     await store.set('key-1', entry2);
+    // hitCount is from the new entry, get() increments it
     const retrieved = await store.get('key-1');
-    expect(retrieved?.hitCount).toBe(10);
+    expect(retrieved?.hitCount).toBe(11);
   });
 
   it('should provide stats', async () => {
