@@ -1,32 +1,27 @@
-#
-# .vercelignore — what Vercel excludes from the deployment upload
-#
+# Vercel deployment exclusions
+# Keep everything needed for the Next.js monorepo build
 
-# Workspace root clutter (keep only apps/api)
+# Workspace root docs (not needed in deployment)
 AGENTS.md
 PLAN.md
 README.md
 
-# Database (applied separately, not deployed)
+# Database — applied separately, not in deployment bundle
 database/
 
-# Tests (not deployed)
+# Tests and docs — not deployed
 tests/
 docs/
 
-# Dependency/cache dirs
-node_modules/
-.pnpm-store/
-coverage/
-
-# Logs, OS files
+# Logs and OS files
 *.log
 .DS_Store
 Thumbs.db
 
-# Environment (secrets!)
+# Secrets
 .env*
-!.env.example
+!
+.env.example
 
 # Git
 .git/
