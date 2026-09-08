@@ -2,7 +2,10 @@
   "name": "@bifrost/routing",
   "version": "0.1.0",
   "private": true,
+  "main": "src/index.ts",
+  "types": "src/index.ts",
   "scripts": {
+    "build": "tsc --build",
     "typecheck": "tsc --noEmit",
     "test": "echo 'routing tests pending'"
   },

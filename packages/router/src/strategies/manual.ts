@@ -5,7 +5,9 @@
  * Router validates the model exists and is enabled, then returns it.
  * No scoring, no fallback selection — just passthrough with validation.
  */
-import { Candidate, RoutingStrategy, RoutingResult, StrategyInput, ModelRegistry, ProviderRegistry } from '../engine';
+import { RoutingStrategy, RoutingResult, StrategyInput, Candidate } from '../engine';
+import { ModelRegistry } from '@bifrost/models';
+import { ProviderRegistry } from '@bifrost/providers';
 
 export class ManualStrategy implements RoutingStrategy {
   readonly name = 'manual';
@@ -18,7 +20,6 @@ export class ManualStrategy implements RoutingStrategy {
   async route(input: StrategyInput): Promise<RoutingResult> {
     const { provider, model, capabilities } = input;
 
-    // If provider+model both specified, validate and return
     if (provider && model) {
       const m = this.models.getModel(model);
       if (!m) {
@@ -47,7 +48,6 @@ export class ManualStrategy implements RoutingStrategy {
       };
     }
 
-    // If only model specified, infer provider from model registry
     if (model) {
       const m = this.models.getModel(model);
       if (!m) {
@@ -74,20 +74,21 @@ export class ManualStrategy implements RoutingStrategy {
       };
     }
 
-    // Neither specified — fall back to the default provider's default model
+    // Neither specified — pick first enabled model from default provider
     const defaultProvider = this.providers.getDefaultProvider();
     if (!defaultProvider) {
       return { selected: null, error: 'No default provider configured', candidates: [] };
     }
 
-    const defaultModel = this.models.getDefaultModelForProvider(defaultProvider);
+    const allModels = this.models.listModels();
+    const defaultModel = allModels.find(m => m.provider === defaultProvider && m.enabled);
     if (!defaultModel) {
       return { selected: null, error: `No default model for provider "${defaultProvider}"`, candidates: [] };
     }
 
     return {
-      selected: { provider: defaultProvider, model: defaultModel },
-      candidates: [{ provider: defaultProvider, model: defaultModel, score: 100 }],
+      selected: { provider: defaultProvider, model: defaultModel.id },
+      candidates: [{ provider: defaultProvider, model: defaultModel.id, score: 100 }],
       metadata: { strategy: 'manual', reason: 'default-fallback' },
     };
   }

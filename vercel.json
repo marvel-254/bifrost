@@ -3,7 +3,12 @@
   "builds": [
     {
       "src": "apps/api/package.json",
-      "use": "@vercel/next"
+      "use": "@vercel/next",
+      "config": {
+        "distDir": "apps/api/.next"
+      }
     }
-  ]
+  ],
+  "installCommand": "pnpm install",
+  "buildCommand": "pnpm --filter=@bifrost/api build"
 }

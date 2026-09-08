@@ -1,235 +1,208 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { ModelRegistry } from '@bifrost/models';
-import { ProviderRegistry, createOllamaProvider, createOpenAiProvider, createZenProvider, createOllamaCloudProvider, createBytezProvider } from '@bifrost/providers';
+import { createSeedRegistry } from '@bifrost/models';
+import type { ModelRegistry } from '@bifrost/models';
+import {
+  ProviderRegistry,
+  createOllamaProvider, createOpenAiProvider, createZenProvider,
+  createOllamaCloudProvider, createBytezProvider, createGeminiProvider,
+  createGroqProvider, createCerebrasProvider, createSambaNovaProvider,
+  createOpenRouterProvider, createCloudflareProvider, createMistralProvider,
+  createHuggingFaceProvider,
+} from '@bifrost/providers';
+import { PolicyEngine } from '@bifrost/routing';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-// ── Model registry (lazy init per serverless invocation) ──────────────────────
+// ── Lazy singletons ────────────────────────────────────────────────────────
 
-let modelRegistry: ModelRegistry | null = null;
+let _models: ModelRegistry | null = null;
+let _providers: ProviderRegistry | null = null;
+let _policy: PolicyEngine | null = null;
 
-function getModelRegistry(): ModelRegistry {
-  if (!modelRegistry) {
-    modelRegistry = new ModelRegistry({
-      models: [
-        // Ollama (self-hosted)
-        { id: 'llama3', provider: 'ollama', displayName: 'Llama 3', contextWindow: 8192, capabilities: ['chat', 'completion', 'tool_use'], inputPrice: 0, outputPrice: 0, enabled: true },
-        { id: 'mistral', provider: 'ollama', displayName: 'Mistral', contextWindow: 32768, capabilities: ['chat', 'completion'], inputPrice: 0, outputPrice: 0, enabled: true },
-        { id: 'llama3.1', provider: 'ollama', displayName: 'Llama 3.1', contextWindow: 128000, capabilities: ['chat', 'completion', 'tool_use', 'vision'], inputPrice: 0, outputPrice: 0, enabled: true },
-        { id: 'gemma2', provider: 'ollama', displayName: 'Gemma 2', contextWindow: 8192, capabilities: ['chat', 'completion'], inputPrice: 0, outputPrice: 0, enabled: true },
-
-        // OpenAI
-        { id: 'gpt-4o', provider: 'openai', displayName: 'GPT-4o', contextWindow: 128000, capabilities: ['chat', 'completion', 'tool_use', 'vision'], inputPrice: 2.50, outputPrice: 10.00, enabled: true },
-        { id: 'gpt-4o-mini', provider: 'openai', displayName: 'GPT-4o Mini', contextWindow: 128000, capabilities: ['chat', 'completion', 'tool_use'], inputPrice: 0.15, outputPrice: 0.60, enabled: true },
-        { id: 'gpt-4-turbo', provider: 'openai', displayName: 'GPT-4 Turbo', contextWindow: 128000, capabilities: ['chat', 'completion', 'tool_use', 'vision'], inputPrice: 10.00, outputPrice: 30.00, enabled: true },
-
-        // Zen
-        { id: 'zen-lite', provider: 'zen', displayName: 'Zen Lite', contextWindow: 8192, capabilities: ['chat', 'completion'], inputPrice: 0.10, outputPrice: 0.30, enabled: true },
-        { id: 'zen-pro', provider: 'zen', displayName: 'Zen Pro', contextWindow: 128000, capabilities: ['chat', 'completion', 'tool_use', 'vision'], inputPrice: 0.50, outputPrice: 1.50, enabled: true },
-
-        // Ollama Cloud
-        { id: 'llama3.1', provider: 'ollama-cloud', displayName: 'Llama 3.1 (Cloud)', contextWindow: 128000, capabilities: ['chat', 'completion', 'tool_use', 'vision'], inputPrice: 0.025, outputPrice: 0.07, enabled: true },
-        { id: 'llama3', provider: 'ollama-cloud', displayName: 'Llama 3 (Cloud)', contextWindow: 8192, capabilities: ['chat', 'completion', 'tool_use'], inputPrice: 0.025, outputPrice: 0.07, enabled: true },
-
-        // Bytez
-        { id: 'bytez-pro', provider: 'bytez', displayName: 'Bytez Pro', contextWindow: 128000, capabilities: ['chat', 'completion', 'tool_use', 'vision'], inputPrice: 0.50, outputPrice: 1.50, enabled: true },
-        { id: 'bytez-fast', provider: 'bytez', displayName: 'Bytez Fast', contextWindow: 8192, capabilities: ['chat', 'completion'], inputPrice: 0.10, outputPrice: 0.30, enabled: true },
-      ]
-    });
-  }
-  return modelRegistry;
+function getModels(): ModelRegistry {
+  if (!_models) _models = createSeedRegistry();
+  return _models;
 }
 
-// ── Provider registry (lazy init) ─────────────────────────────────────────────
+function getProviders(): ProviderRegistry {
+  if (!_providers) {
+    _providers = new ProviderRegistry({ defaultProvider: 'gemini' });
 
-let providerRegistry: ProviderRegistry | null = null;
-
-function getProviderRegistry(): ProviderRegistry {
-  if (!providerRegistry) {
-    providerRegistry = new ProviderRegistry({ defaultProvider: 'ollama' });
-
-    // Ollama (self-hosted) — no API key needed
-    providerRegistry.register(createOllamaProvider({
+    // Tier 0 — Local
+    _providers.register(createOllamaProvider({
       baseUrl: process.env.OLLAMA_URL || 'http://localhost:11434',
       defaultModel: 'llama3',
       timeoutMs: Number(process.env.OLLAMA_TIMEOUT_MS || 30000),
     }));
 
-    // OpenAI
-    providerRegistry.register(createOpenAiProvider({
+    // Tier 1 — Recurring free
+    _providers.register(createGeminiProvider({
+      apiKey: process.env.GEMINI_API_KEY || '',
+      defaultModel: 'gemini-2.0-flash',
+      timeoutMs: Number(process.env.GEMINI_TIMEOUT_MS || 60000),
+    }));
+    _providers.register(createGroqProvider({
+      apiKey: process.env.GROQ_API_KEY || '',
+      defaultModel: 'llama-3.3-70b-versatile',
+      timeoutMs: Number(process.env.GROQ_TIMEOUT_MS || 30000),
+    }));
+    _providers.register(createCerebrasProvider({
+      apiKey: process.env.CEREBRAS_API_KEY || '',
+      defaultModel: 'llama-3.3-70b',
+      timeoutMs: Number(process.env.CEREBRAS_TIMEOUT_MS || 30000),
+    }));
+    _providers.register(createSambaNovaProvider({
+      apiKey: process.env.SAMBANOVA_API_KEY || '',
+      defaultModel: 'Meta-Llama-3.3-70B-Instruct',
+      timeoutMs: Number(process.env.SAMBANOVA_TIMEOUT_MS || 60000),
+    }));
+    _providers.register(createOpenRouterProvider({
+      apiKey: process.env.OPENROUTER_API_KEY || '',
+      defaultModel: 'meta-llama/llama-3.3-70b-instruct:free',
+      timeoutMs: Number(process.env.OPENROUTER_TIMEOUT_MS || 60000),
+    }));
+    _providers.register(createCloudflareProvider({
+      accountId: process.env.CLOUDFLARE_ACCOUNT_ID || '',
+      apiKey: process.env.CLOUDFLARE_API_KEY || '',
+      defaultModel: '@cf/meta/llama-3.3-70b-instruct-fp16',
+      timeoutMs: Number(process.env.CLOUDFLARE_TIMEOUT_MS || 30000),
+    }));
+    _providers.register(createMistralProvider({
+      apiKey: process.env.MISTRAL_API_KEY || '',
+      defaultModel: 'mistral-small-latest',
+      timeoutMs: Number(process.env.MISTRAL_TIMEOUT_MS || 60000),
+    }));
+    _providers.register(createHuggingFaceProvider({
+      apiKey: process.env.HUGGINGFACE_API_KEY || '',
+      defaultModel: 'meta-llama/Llama-3.3-70B-Instruct',
+      timeoutMs: Number(process.env.HUGGINGFACE_TIMEOUT_MS || 60000),
+    }));
+
+    // Tier 3 — Paid
+    _providers.register(createOpenAiProvider({
       apiKey: process.env.OPENAI_API_KEY || '',
       baseUrl: process.env.OPENAI_BASE_URL || undefined,
       defaultModel: 'gpt-4o',
       timeoutMs: Number(process.env.OPENAI_TIMEOUT_MS || 60000),
     }));
-
-    // Zen
-    providerRegistry.register(createZenProvider({
+    _providers.register(createZenProvider({
       apiKey: process.env.ZEN_API_KEY || '',
       baseUrl: process.env.ZEN_BASE_URL || undefined,
       defaultModel: 'zen-lite',
       timeoutMs: Number(process.env.ZEN_TIMEOUT_MS || 60000),
     }));
-
-    // Ollama Cloud
-    providerRegistry.register(createOllamaCloudProvider({
+    _providers.register(createOllamaCloudProvider({
       apiKey: process.env.OLLAMA_CLOUD_API_KEY || '',
       baseUrl: process.env.OLLAMA_CLOUD_BASE_URL || undefined,
-      defaultModel: 'llama3.1',
+      defaultModel: 'llama3.1-cloud',
       timeoutMs: Number(process.env.OLLAMA_CLOUD_TIMEOUT_MS || 60000),
     }));
-
-    // Bytez
-    providerRegistry.register(createBytezProvider({
+    _providers.register(createBytezProvider({
       apiKey: process.env.BYTEZ_API_KEY || '',
       baseUrl: process.env.BYTEZ_BASE_URL || undefined,
       defaultModel: 'bytez-pro',
       timeoutMs: Number(process.env.BYTEZ_TIMEOUT_MS || 60000),
     }));
   }
-  return providerRegistry;
+  return _providers;
 }
 
-// ── Helpers ────────────────────────────────────────────────────────────────────
+function getPolicy(): PolicyEngine {
+  if (!_policy) _policy = new PolicyEngine();
+  return _policy;
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────────
 
 function generateId(): string {
   return `bifrost_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
 }
 
 function checkAuth(request: NextRequest): { ok: boolean; status?: number; body?: object } {
+  const configuredKey = process.env.API_KEY;
+  if (!configuredKey) return { ok: true };
   const auth = request.headers.get('authorization');
-  const apiKey = process.env.API_KEY || 'dev-key-change-in-production';
-  if (apiKey && auth !== `Bearer ${apiKey}`) {
+  if (auth !== `Bearer ${configuredKey}`) {
     return { ok: false, status: 401, body: { error: { message: 'Unauthorized', type: 'authentication_error' } } };
   }
   return { ok: true };
 }
 
 async function parseBody(request: NextRequest): Promise<Record<string, unknown> | null> {
-  try {
-    return await request.json() as Record<string, unknown>;
-  } catch {
-    return null;
-  }
+  try { return await request.json() as Record<string, unknown>; } catch { return null; }
 }
 
-// ── Provider call helper (normalized OpenAI-compatible) ───────────────────────
+// ── Routes ─────────────────────────────────────────────────────────────────
 
-async function callProvider(
-  providerName: string,
-  modelId: string,
-  body: Record<string, unknown>,
-  signal?: AbortSignal,
-  extraHeaders?: Record<string, string>
-): Promise<Response> {
-  const registry = getProviderRegistry();
-  const provider = registry.getProvider(providerName);
-  if (!provider) {
-    return new Response(JSON.stringify({ error: { message: `Provider '${providerName}' not registered`, type: 'internal_error' } }), {
-      status: 501,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  }
-
-  // Each provider adapter implements its own HTTP call via complete()/stream(),
-  // but for the route handler we need raw Response objects for streaming.
-  // We'll dispatch differently for streaming vs non-streaming below.
-  // This helper is used only by non-streaming path for providers that don't
-  // expose a raw fetch — fallback to adapter's complete().
-  return new Response(JSON.stringify({ error: { message: 'Use provider-specific handler' } }), { status: 501 });
-}
-
-// ── Routes ─────────────────────────────────────────────────────────────────────
-
-export async function GET(request: NextRequest): Promise<NextResponse> {
-  return NextResponse.json({
-    status: 'ok',
-    version: '0.1.0',
-    timestamp: Date.now(),
-  });
+export async function GET(_request: NextRequest): Promise<NextResponse> {
+  return NextResponse.json({ status: 'ok', version: '0.1.0', timestamp: Date.now() });
 }
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const authCheck = checkAuth(request);
-  if (!authCheck.ok) {
-    return NextResponse.json(authCheck.body!, { status: authCheck.status as number });
-  }
+  if (!authCheck.ok) return NextResponse.json(authCheck.body!, { status: authCheck.status as number });
 
   const body = await parseBody(request);
-  if (!body) {
-    return NextResponse.json(
-      { error: { message: 'Invalid JSON in request body', type: 'invalid_request_error' } },
-      { status: 400 }
-    );
-  }
+  if (!body) return NextResponse.json({ error: { message: 'Invalid JSON', type: 'invalid_request_error' } }, { status: 400 });
 
   const modelId = String(body.model || '');
   const messages: unknown[] = Array.isArray(body.messages) ? body.messages : [];
   const stream = Boolean(body.stream);
   const temperature = Number(body.temperature ?? 0.7);
   const maxTokens = Number(body.max_tokens ?? body.maxTokens ?? 4096);
+  const costMode = (body.cost_mode as string) || 'any';
+  const strategy = (body.strategy as string) || 'balanced';
 
-  if (!modelId) {
-    return NextResponse.json(
-      { error: { message: 'Missing required parameter: model', type: 'invalid_request_error' } },
-      { status: 400 }
-    );
-  }
+  if (!modelId) return NextResponse.json({ error: { message: 'Missing: model', type: 'invalid_request_error' } }, { status: 400 });
+  if (!messages.length) return NextResponse.json({ error: { message: 'Missing: messages', type: 'invalid_request_error' } }, { status: 400 });
 
-  if (!messages.length) {
-    return NextResponse.json(
-      { error: { message: 'Missing required parameter: messages', type: 'invalid_request_error' } },
-      { status: 400 }
-    );
-  }
-
-  const models = getModelRegistry();
+  const models = getModels();
   const model = models.getModel(modelId);
-  if (!model) {
-    return NextResponse.json(
-      { error: { message: `Model '${modelId}' not found`, type: 'model_not_found' } },
-      { status: 404 }
-    );
+  if (!model) return NextResponse.json({ error: { message: `Model '${modelId}' not found`, type: 'model_not_found' } }, { status: 404 });
+  if (!model.enabled) return NextResponse.json({ error: { message: `Model '${modelId}' is disabled`, type: 'invalid_request_error' } }, { status: 400 });
+
+  // When a specific model is requested, go direct. When "auto", use policy engine.
+  let providerName = model.provider;
+  let selectedModelId = modelId;
+
+  if (modelId === 'auto') {
+    const registry = getProviders();
+    const policy = getPolicy();
+    const allModels = models.listModels();
+    const candidates = allModels
+      .filter(m => m.enabled)
+      .map(m => ({
+        provider: { id: m.provider, name: m.provider, enabled: true, billingType: 'free' as const, streaming: true },
+        model: { id: m.id, provider: m.provider, contextWindow: m.contextWindow, capabilities: m.capabilities, inputPrice: m.inputPrice ?? 0, outputPrice: m.outputPrice ?? 0, enabled: true },
+        request: { tools: !!body.tools, streaming: stream, costMode: costMode as any, task: body.task as any, inputTokens: body.context_tokens as number | undefined },
+      }));
+
+    const results = policy.evaluate(candidates, strategy);
+    const best = results.find(r => !r.hardFiltered);
+    if (!best) return NextResponse.json({ error: { message: 'No eligible model for request', type: 'routing_error' } }, { status: 404 });
+    providerName = best.provider;
+    selectedModelId = best.model;
   }
 
-  if (!model.enabled) {
-    return NextResponse.json(
-      { error: { message: `Model '${modelId}' is disabled`, type: 'invalid_request_error' } },
-      { status: 400 }
-    );
-  }
+  const registry = getProviders();
+  const provider = registry.getProvider(providerName);
+  if (!provider) return NextResponse.json({ error: { message: `Provider '${providerName}' not registered`, type: 'internal_error' } }, { status: 501 });
 
-  const providerName = model.provider;
+  const requestPayload: Record<string, unknown> = { model: selectedModelId, messages, temperature, max_tokens: maxTokens };
+  if (body.tools) requestPayload.tools = body.tools;
+  if (body.tool_choice) requestPayload.tool_choice = body.tool_choice;
 
-  // ── Dispatch to provider adapter ──────────────────────────────────────────
-
-  // Non-streaming: use adapter's complete()
+  // ── Non-streaming ─────────────────────────────────────────────────────
   if (!stream) {
-    const registry = getProviderRegistry();
-    const provider = registry.getProvider(providerName);
-    if (!provider) {
-      return NextResponse.json(
-        { error: { message: `Provider '${providerName}' not registered`, type: 'internal_error' } },
-        { status: 501 }
-      );
-    }
-
-    const requestPayload: Record<string, unknown> = {
-      model: modelId,
-      messages,
-      temperature,
-      max_tokens: maxTokens,
-    };
-
     const controller = new AbortController();
     const timeoutMs = Number(process.env.PROVIDER_TIMEOUT_MS || 60000);
     const timeout = setTimeout(() => controller.abort(), timeoutMs);
-
     try {
       const start = Date.now();
       const result = await provider.complete(requestPayload);
       const latencyMs = Date.now() - start;
+      clearTimeout(timeout);
 
       const data = result as Record<string, unknown>;
       const choices = (data.choices || []) as Array<{ index?: number; message?: { role?: string; content?: string }; finish_reason?: string | null }>;
@@ -239,88 +212,41 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         id: data.id || generateId(),
         object: 'chat.completion',
         created: (data.created as number) || Math.floor(Date.now() / 1000),
-        model: modelId,
-        choices: [{
-          index: (choices[0]?.index ?? 0) as number,
-          message: {
-            role: (choices[0]?.message?.role ?? 'assistant') as string,
-            content: (choices[0]?.message?.content ?? '') as string,
-          },
-          finish_reason: choices[0]?.finish_reason || 'stop',
-        }],
-        usage: {
-          prompt_tokens: (usage.prompt_tokens ?? 0) as number,
-          completion_tokens: (usage.completion_tokens ?? 0) as number,
-          total_tokens: (usage.total_tokens ?? ((usage.prompt_tokens ?? 0) as number) + ((usage.completion_tokens ?? 0) as number)) as number,
-        },
+        model: selectedModelId,
+        choices: [{ index: 0, message: { role: 'assistant', content: choices[0]?.message?.content || '' }, finish_reason: choices[0]?.finish_reason || 'stop' }],
+        usage: { prompt_tokens: usage.prompt_tokens ?? 0, completion_tokens: usage.completion_tokens ?? 0, total_tokens: usage.total_tokens ?? 0 },
       });
     } catch (err) {
       clearTimeout(timeout);
       const message = err instanceof Error ? err.message : 'Provider request failed';
-      return NextResponse.json(
-        { error: { message, type: 'provider_error', provider: providerName, code: 'PROVIDER_ERROR' } },
-        { status: 502 }
-      );
+      return NextResponse.json({ error: { message, type: 'provider_error', provider: providerName, code: 'PROVIDER_ERROR' } }, { status: 502 });
     }
   }
 
-  // ── Streaming: use adapter's stream() ──────────────────────────────────────
-
-  const registry = getProviderRegistry();
-  const provider = registry.getProvider(providerName);
-  if (!provider) {
-    return NextResponse.json(
-      { error: { message: `Provider '${providerName}' not registered`, type: 'internal_error' } },
-      { status: 501 }
-    );
-  }
-
-  const requestPayload: Record<string, unknown> = {
-    model: modelId,
-    messages,
-    temperature,
-    max_tokens: maxTokens,
-  };
-
-  const controller = new AbortController();
-  const timeoutMs = Number(process.env.PROVIDER_TIMEOUT_MS || 60000);
-  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  // ── Streaming ─────────────────────────────────────────────────────────
   const id = generateId();
   const created = Math.floor(Date.now() / 1000);
   const encoder = new TextEncoder();
+  const timeoutMs = Number(process.env.PROVIDER_TIMEOUT_MS || 60000);
+  const timeout = setTimeout(() => {}, timeoutMs);
 
   const sseStream = new ReadableStream({
     async start(rsController) {
-      // Role header chunk
-      rsController.enqueue(encoder.encode(
-        `data: ${JSON.stringify({ id, object: 'chat.completion.chunk', created, model: modelId, choices: [{ index: 0, delta: { role: 'assistant' }, finish_reason: null }] })}\n\n`
-      ));
-
+      rsController.enqueue(encoder.encode(`data: ${JSON.stringify({ id, object: 'chat.completion.chunk', created, model: selectedModelId, choices: [{ index: 0, delta: { role: 'assistant' }, finish_reason: null }] })}\n\n`));
       try {
         await provider.stream(requestPayload, async (chunk) => {
-          const data = chunk as Record<string, unknown>;
-          rsController.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
+          rsController.enqueue(encoder.encode(`data: ${JSON.stringify(chunk)}\n\n`));
         });
       } catch (err) {
-        clearTimeout(timeout);
         const message = err instanceof Error ? err.message : 'Stream error';
-        rsController.enqueue(encoder.encode(
-          `data: ${JSON.stringify({ id, object: 'chat.completion.chunk', created, model: modelId, choices: [{ index: 0, delta: {}, finish_reason: 'stop' }], error: { message, type: 'provider_error' } })}\n\n`
-        ));
+        rsController.enqueue(encoder.encode(`data: ${JSON.stringify({ id, object: 'chat.completion.chunk', created, model: selectedModelId, choices: [{ index: 0, delta: {}, finish_reason: 'stop' }], error: { message, type: 'provider_error' } })}\n\n`));
+      } finally {
+        clearTimeout(timeout);
       }
-
       rsController.enqueue(encoder.encode('data: [DONE]\n\n'));
       rsController.close();
     },
   });
 
-  clearTimeout(timeout);
-
-  return new Response(sseStream, {
-    headers: {
-      'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache',
-      'Connection': 'keep-alive',
-    },
-  }) as unknown as NextResponse;
+  return new Response(sseStream, { headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive' } }) as unknown as NextResponse;
 }

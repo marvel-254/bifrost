@@ -2,11 +2,8 @@ import { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Bifröst — AI Gateway Dashboard',
-  description: 'Lightweight OpenAI-compatible AI model gateway and intelligent router',
-  icons: {
-    icon: '/icon.svg',
-  },
+  title: 'Bifrost // AI Gateway Control Plane',
+  description: 'OpenAI-compatible AI gateway and intelligent model router',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

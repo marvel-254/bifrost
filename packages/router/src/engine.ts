@@ -1,11 +1,11 @@
-import { IProvider } from '../../providers/registry';
-import { ModelRegistry } from '../../models/registry';
+import { Model } from '@bifrost/models';
+import { IProvider } from '@bifrost/providers';
 
 // ── Strategy interface ──────────────────────────────────────────────────────
 
 export interface RoutingResult {
   selected: { provider: string; model: string } | null;
-  error: string | null;
+  error?: string | null;
   candidates: Candidate[];
   metadata?: Record<string, unknown>;
 }

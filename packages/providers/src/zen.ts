@@ -1,4 +1,4 @@
-import { IProvider } from '../registry';
+import { IProvider } from './registry';
 
 const DEFAULT_BASE_URL = 'https://api.zenlora.com/v1';
 const DEFAULT_TIMEOUT_MS = 60000;

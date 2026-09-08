@@ -1,4 +1,4 @@
-import { IProvider } from '../src/registry.js';
+import { IProvider } from './registry';
 
 const OLLAMA_DEFAULT_URL = 'http://localhost:11434';
 const OLLAMA_TIMEOUT_MS = 30000;

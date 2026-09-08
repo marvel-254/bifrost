@@ -9,7 +9,8 @@
     "paths": {
       "@bifrost/shared": ["../../packages/shared/src"],
       "@bifrost/models": ["../../packages/models/src"],
-      "@bifrost/providers": ["../../packages/providers/src"]
+      "@bifrost/providers": ["../../packages/providers/src"],
+      "@bifrost/routing": ["../../packages/router/src"]
     },
     "incremental": true
   },

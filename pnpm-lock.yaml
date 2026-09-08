@@ -38,6 +38,9 @@ importers:
       '@bifrost/providers':
         specifier: workspace:*
         version: link:../../packages/providers
+      '@bifrost/routing':
+        specifier: workspace:*
+        version: link:../../packages/router
       '@bifrost/shared':
         specifier: workspace:*
         version: link:../../packages/shared

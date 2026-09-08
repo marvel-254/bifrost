@@ -1,0 +1,35 @@
+#
+# .vercelignore — what Vercel excludes from the deployment upload
+#
+
+# Workspace root clutter (keep only apps/api)
+AGENTS.md
+PLAN.md
+README.md
+
+# Monorepo packages — built into the API app
+packages/
+
+# Database (applied separately, not deployed)
+database/
+
+# Tests (not deployed)
+tests/
+docs/
+
+# Dependency/cache dirs
+node_modules/
+.pnpm-store/
+coverage/
+
+# Logs, OS files
+*.log
+.DS_Store
+Thumbs.db
+
+# Environment (secrets!)
+.env*
+!.env.example
+
+# Git
+.git/

@@ -1,0 +1,101 @@
+import { IProvider } from './registry';
+
+const DEFAULT_BASE_URL = 'https://api.cerebras.ai/v1';
+const DEFAULT_TIMEOUT_MS = 30000;
+
+export type CerebrasProviderConfig = {
+  apiKey?: string;
+  baseUrl?: string;
+  defaultModel?: string;
+  timeoutMs?: number;
+};
+
+/**
+ * Cerebras provider adapter.
+ * OpenAI-compatible endpoint. Ultra-low latency inference.
+ */
+export class CerebrasProvider implements IProvider {
+  name = 'cerebras';
+  private apiKey: string;
+  private baseUrl: string;
+  private defaultModel: string;
+  private timeoutMs: number;
+
+  constructor(config: CerebrasProviderConfig = {}) {
+    this.apiKey = config.apiKey || '';
+    this.baseUrl = config.baseUrl || DEFAULT_BASE_URL;
+    this.defaultModel = config.defaultModel || 'llama-3.3-70b';
+    this.timeoutMs = config.timeoutMs || DEFAULT_TIMEOUT_MS;
+  }
+
+  async authenticate(_config: Record<string, unknown>): Promise<boolean> {
+    if (!this.apiKey) return false;
+    try {
+      const res = await this.fetchJson<unknown>(`${this.baseUrl}/models`);
+      return !!res;
+    } catch { return false; }
+  }
+
+  async listModels(): Promise<Array<{ id: string; name: string; contextWindow: number; capabilities: string[] }>> {
+    const res = await this.fetchJson<{ data: Array<{ id: string }> }>(`${this.baseUrl}/models`);
+    return (res.data || []).map(m => ({
+      id: m.id, name: m.id, contextWindow: 128000, capabilities: ['chat', 'completion'],
+    }));
+  }
+
+  async complete(request: Record<string, unknown>): Promise<Record<string, unknown>> {
+    const payload = this.buildPayload(request, false);
+    const res = await this.fetchJson<Record<string, unknown>>(`${this.baseUrl}/chat/completions`, {
+      method: 'POST', body: JSON.stringify(payload),
+    });
+    if ((res as any).error) throw new Error(String((res as any).error?.message || 'Cerebras API error'));
+    return res;
+  }
+
+  async stream(request: Record<string, unknown>, onChunk: (chunk: Record<string, unknown>) => void | Promise<void>): Promise<void> {
+    const payload = this.buildPayload(request, true);
+    const res = await fetch(`${this.baseUrl}/chat/completions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${this.apiKey}` },
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(this.timeoutMs),
+    });
+    if (!res.ok) { const t = await res.text(); throw new Error(`Cerebras stream error: ${res.status} ${t}`); }
+    const reader = res.body?.getReader(); if (!reader) throw new Error('No body');
+    const dec = new TextDecoder(); let buf = '';
+    while (true) {
+      const { done, value } = await reader.read(); if (done) break;
+      buf += dec.decode(value, { stream: true }); const lines = buf.split('\n'); buf = lines.pop() || '';
+      for (const line of lines) {
+        const t = line.trim(); if (!t.startsWith('data: ')) continue;
+        const d = t.slice(6).trim(); if (d === '[DONE]') continue;
+        try {
+          const p = JSON.parse(d); const c = p.choices?.[0];
+          if (c?.delta?.content) await onChunk({ id: p.id, object: 'chat.completion.chunk', created: p.created, model: p.model, choices: [{ index: 0, delta: { content: c.delta.content }, finish_reason: c.finish_reason || null }] });
+        } catch { /* skip */ }
+      }
+    }
+  }
+
+  async healthCheck(): Promise<{ healthy: boolean; latencyMs?: number; error?: string }> {
+    const s = Date.now();
+    try { await this.fetchJson<unknown>(`${this.baseUrl}/models`); return { healthy: true, latencyMs: Date.now() - s }; }
+    catch (e) { return { healthy: false, error: e instanceof Error ? e.message : String(e) }; }
+  }
+
+  async estimateCost(_i: number, _o: number): Promise<number | null> { return 0; }
+
+  private buildPayload(r: Record<string, unknown>, stream: boolean): Record<string, unknown> {
+    return { model: String(r.model || this.defaultModel), messages: Array.isArray(r.messages) ? r.messages : [], stream, temperature: Number(r.temperature ?? 0.7), max_tokens: Number(r.max_tokens ?? r.maxTokens ?? 4096) };
+  }
+
+  private async fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
+    const res = await fetch(url, { ...init, headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${this.apiKey}`, ...((init?.headers as Record<string, string>) || {}) }, signal: AbortSignal.timeout(this.timeoutMs) });
+    if (!res.ok) { const t = await res.text(); throw new Error(`Cerebras error ${res.status}: ${t}`); }
+    return res.json() as Promise<T>;
+  }
+}
+
+export function createCerebrasProvider(config?: CerebrasProviderConfig): CerebrasProvider {
+  return new CerebrasProvider(config);
+}
