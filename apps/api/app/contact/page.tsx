@@ -167,7 +167,7 @@ export default function ContactPage() {
         )}
       </div>
 
-      <style jsx global>{`
+      <style>{`
         @keyframes spin {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
