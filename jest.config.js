@@ -4,5 +4,6 @@ module.exports = {
     '<rootDir>/packages/models',
     '<rootDir>/packages/providers',
     '<rootDir>/packages/reliability',
+    '<rootDir>/packages/policy',
   ],
 };

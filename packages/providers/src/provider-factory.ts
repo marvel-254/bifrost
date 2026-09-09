@@ -15,6 +15,14 @@ import { createMistralProvider } from './mistral';
 import { createHuggingFaceProvider } from './huggingface';
 import { createVercelGatewayProvider } from './vercel-gateway';
 import { createOpenAiProvider } from './openai';
+import {
+  createTogetherProvider, createFireworksProvider, createDeepInfraProvider,
+  createNovitaProvider, createLeptonProvider, createHyperbolicProvider,
+  createCohereProvider, createAi21Provider, createNvidiaProvider,
+  createAnyscaleProvider, createDeepSeekProvider, createXaiProvider,
+  createZhipuProvider, createQwenProvider, createMoonshotProvider,
+  createFeatherlessProvider, createMancerProvider, createNscaleProvider,
+} from './openai-compatible';
 import type { IProvider } from './registry';
 
 export interface ProviderWithRotation {
@@ -92,6 +100,43 @@ function createProviderInstance(name: string, apiKey: string, config?: Record<st
       return createVercelGatewayProvider({ apiKey, defaultModel, timeoutMs });
     case 'openai':
       return createOpenAiProvider({ apiKey, baseUrl, defaultModel, timeoutMs });
+    // ── OpenAI-compatible providers ──────────────────────────────────────
+    case 'together':
+      return createTogetherProvider({ apiKey, defaultModel, timeoutMs });
+    case 'fireworks':
+      return createFireworksProvider({ apiKey, defaultModel, timeoutMs });
+    case 'deepinfra':
+      return createDeepInfraProvider({ apiKey, defaultModel, timeoutMs });
+    case 'novita':
+      return createNovitaProvider({ apiKey, defaultModel, timeoutMs });
+    case 'lepton':
+      return createLeptonProvider({ apiKey, defaultModel, timeoutMs });
+    case 'hyperbolic':
+      return createHyperbolicProvider({ apiKey, defaultModel, timeoutMs });
+    case 'cohere':
+      return createCohereProvider({ apiKey, defaultModel, timeoutMs });
+    case 'ai21':
+      return createAi21Provider({ apiKey, defaultModel, timeoutMs });
+    case 'nvidia':
+      return createNvidiaProvider({ apiKey, defaultModel, timeoutMs });
+    case 'anyscale':
+      return createAnyscaleProvider({ apiKey, defaultModel, timeoutMs });
+    case 'deepseek':
+      return createDeepSeekProvider({ apiKey, defaultModel, timeoutMs });
+    case 'xai':
+      return createXaiProvider({ apiKey, defaultModel, timeoutMs });
+    case 'zhipu':
+      return createZhipuProvider({ apiKey, defaultModel, timeoutMs });
+    case 'qwen':
+      return createQwenProvider({ apiKey, defaultModel, timeoutMs });
+    case 'moonshot':
+      return createMoonshotProvider({ apiKey, defaultModel, timeoutMs });
+    case 'featherless':
+      return createFeatherlessProvider({ apiKey, defaultModel, timeoutMs });
+    case 'mancer':
+      return createMancerProvider({ apiKey, defaultModel, timeoutMs });
+    case 'nscale':
+      return createNscaleProvider({ apiKey, defaultModel, timeoutMs });
     default:
       throw new Error(`Unknown provider: ${name}`);
   }

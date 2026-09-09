@@ -7,7 +7,7 @@ describe('CircuitBreaker', () => {
     cb = new CircuitBreaker({
       failureThreshold: 5,
       timeoutThreshold: 1000,
-      recoveryTimeout: 5000,
+      recoveryTimeout: 200,
       probeFrequency: 50,
       threshold429: 2,
       threshold5xx: 2,
@@ -24,73 +24,74 @@ describe('CircuitBreaker', () => {
   });
 
   test('opens after threshold failures', async () => {
-    for (let i = 0; i < 2; i++) {
-      await expect(cb.execute('test', async () => {
-        throw new Error('server error 500');
-      })).rejects.toThrow();
-    }
+    await expect(cb.execute('test', async () => {
+      throw new Error('server error 500');
+    })).rejects.toThrow();
+    await expect(cb.execute('test', async () => {
+      throw new Error('server error 500');
+    })).rejects.toThrow();
     const metrics = cb.getMetrics('test');
     expect(metrics.state).toBe('OPEN');
     expect(metrics.failureCount).toBe(2);
   });
 
   test('rejects when OPEN', async () => {
-    await cb.execute('test', async () => {
+    await expect(cb.execute('test', async () => {
       throw new Error('server error 500');
-    });
-    await cb.execute('test', async () => {
+    })).rejects.toThrow();
+    await expect(cb.execute('test', async () => {
       throw new Error('server error 500');
-    });
+    })).rejects.toThrow();
     await expect(cb.execute('test', async () => 'ok')).rejects.toThrow('Circuit breaker OPEN');
   });
 
   test('transitions to HALF_OPEN after recoveryTimeout', async () => {
-    await cb.execute('test', async () => {
+    await expect(cb.execute('test', async () => {
       throw new Error('server error 500');
-    });
-    await cb.execute('test', async () => {
+    })).rejects.toThrow();
+    await expect(cb.execute('test', async () => {
       throw new Error('server error 500');
-    });
+    })).rejects.toThrow();
     expect(cb.getMetrics('test').state).toBe('OPEN');
 
-    await new Promise(r => setTimeout(r, 100));
     cb.forceOpen('test');
+    await new Promise(r => setTimeout(r, 100));
     expect(cb.getMetrics('test').state).toBe('OPEN');
   });
 
   test('success resets failure count in HALF_OPEN', async () => {
-    await cb.execute('test', async () => {
+    await expect(cb.execute('test', async () => {
       throw new Error('server error 500');
-    });
-    await cb.execute('test', async () => {
+    })).rejects.toThrow();
+    await expect(cb.execute('test', async () => {
       throw new Error('server error 500');
-    });
+    })).rejects.toThrow();
 
     cb.forceOpen('test');
-    await new Promise(r => setTimeout(r, 100));
+    await new Promise(r => setTimeout(r, 600));
     await expect(cb.execute('test', async () => 'ok')).resolves.toBe('ok');
     expect(cb.getMetrics('test').failureCount).toBe(0);
     expect(cb.getMetrics('test').state).toBe('CLOSED');
   });
 
   test('different keys have independent states', async () => {
-    await cb.execute('a', async () => {
+    await expect(cb.execute('a', async () => {
       throw new Error('server error 500');
-    });
-    await cb.execute('a', async () => {
+    })).rejects.toThrow();
+    await expect(cb.execute('a', async () => {
       throw new Error('server error 500');
-    });
+    })).rejects.toThrow();
     expect(cb.getMetrics('a').state).toBe('OPEN');
     expect(cb.getMetrics('b').state).toBe('CLOSED');
   });
 
   test('forceClose resets state', async () => {
-    await cb.execute('test', async () => {
+    await expect(cb.execute('test', async () => {
       throw new Error('server error 500');
-    });
-    await cb.execute('test', async () => {
+    })).rejects.toThrow();
+    await expect(cb.execute('test', async () => {
       throw new Error('server error 500');
-    });
+    })).rejects.toThrow();
     cb.forceClose('test');
     expect(cb.getMetrics('test').state).toBe('CLOSED');
     expect(cb.getMetrics('test').failureCount).toBe(0);
@@ -99,11 +100,11 @@ describe('CircuitBreaker', () => {
 
   test('separate thresholds for different error types', async () => {
     for (let i = 0; i < 2; i++) {
-      await cb.execute('test', async () => {
+      await expect(cb.execute('test', async () => {
         const err = new Error('429 rate limit');
         (err as any).status = 429;
         throw err;
-      });
+      })).rejects.toThrow();
     }
     expect(cb.getMetrics('test').state).toBe('OPEN');
   });
@@ -118,9 +119,9 @@ describe('CircuitBreaker', () => {
     expect(metrics.lastSuccess).toBeLessThanOrEqual(afterSuccess);
     expect(metrics.lastFailure).toBeNull();
 
-    await cb.execute('test', async () => {
+    await expect(cb.execute('test', async () => {
       throw new Error('fail');
-    });
+    })).rejects.toThrow();
     expect(cb.getMetrics('test').lastFailure).toBeDefined();
   });
 });

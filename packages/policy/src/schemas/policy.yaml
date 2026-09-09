@@ -1,0 +1,54 @@
+# Bifröst Policy-as-Code YAML Schema
+# Use this as a reference for writing policy YAML files.
+
+# Top-level: a list of policies.
+policies:
+  - name: string                  # Unique policy identifier
+    priority: number              # Higher = more specific (default: 0)
+    version: string               # Semver-like version string (default: "v1")
+    extends: string               # Optional parent policy name for inheritance
+    enabled: boolean              # Whether policy is active (default: true)
+
+    # Match criteria — determines which requests this policy applies to.
+    match:
+      tags: string[]              # Request must have at least one of these tags
+      tenant: string              # Exact tenant ID match (optional)
+      application: string         # Exact application name match (optional)
+      conditions:
+        AND:                      # All conditions must be true
+          - field: string         # e.g. "model", "stream", "tools", "metadata.foo"
+            operator: string      # eq | neq | gt | gte | lt | lte | in | nin | contains
+            value: unknown        # Comparison value
+        OR:                       # At least one condition must be true
+          - field: string
+            operator: string
+            value: unknown
+
+    # Hard constraints — enforced before routing.
+    constraints:
+      max_cost: number            # Maximum cost per request (USD)
+      max_latency_ms: number      # Maximum allowed latency (ms)
+      data_region: string         # Required data region (us | eu | ap | global)
+      allowed_regions: string[]   # Permitted regions for providers
+      prohibited_regions: string[] # Explicitly forbidden regions
+
+    # Feature requirements — must be supported by selected provider.
+    require:
+      tools: boolean              # Require tool/function calling support
+      structured_output: boolean  # Require structured output (JSON mode)
+      capabilities: string[]      # Required capabilities (e.g. "vision", "embeddings")
+
+    # Preferences — soft preferences used during scoring.
+    prefer:
+      quality: string             # low | medium | high
+      cost: string                # low | medium | high
+      latency: string             # low | medium | high
+
+    # Fallback behavior.
+    fallback:
+      strategy: string            # auto | manual | none
+
+    # Optimization settings.
+    optimization:
+      compression: string         # off | safe | balanced | aggressive | auto
+      cache: boolean              # Enable caching for matched requests (default: true)

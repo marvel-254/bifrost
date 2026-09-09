@@ -21,7 +21,15 @@ import {
   DEFAULT_ROUTING_STRATEGY,
   type NormalizedMessage,
   type NormalizedRequest,
+  type NormalizedResponse,
+  type NormalizedStreamEvent,
   type RoutingCandidate,
+  type ProviderAdapter,
+  createTrace,
+  finalizeTrace,
+  startSpan,
+  endSpan,
+  calculateScore,
 } from '../../../../../imports';
 import { getAllProviderKeys } from '../../../../../../../packages/shared/src/db';
 
@@ -56,7 +64,6 @@ let _fallback: AutoFallback | null = null;
 let _backpressure: BackpressureEngine | null = null;
 let _priorityQueue: PriorityQueue | null = null;
 let _streamKeepalive: StreamKeepalive | null = null;
-let _executionEngine: ExecutionEngine | null = null;
 
 function getModels(): ModelRegistry {
   if (!_models) _models = createSeedRegistry();
@@ -187,31 +194,52 @@ function getStreamKeepalive(): StreamKeepalive {
   return _streamKeepalive;
 }
 
-function getExecutionEngine(): ExecutionEngine {
+let _executionEngine: Promise<ExecutionEngine> | null = null;
+
+async function getExecutionEngine(): Promise<ExecutionEngine> {
   if (!_executionEngine) {
-    const providers = getProvidersSync();
-    _executionEngine = new ExecutionEngine({
-      circuitBreaker: getCircuitBreaker(),
-      cooldown: getCooldown(),
-      fallback: getFallback(),
-      backpressure: getBackpressure(),
-      priorityQueue: getPriorityQueue(),
-      streamKeepalive: getStreamKeepalive(),
-      providerRegistry: providers,
-      config: {},
-    });
+    _executionEngine = (async () => {
+      const registry = await getProviders();
+      const map = new Map<string, {
+        chat(request: NormalizedRequest): Promise<NormalizedResponse>;
+        stream(request: NormalizedRequest): AsyncIterable<NormalizedStreamEvent>;
+      }>();
+      for (const name of ['ollama', 'gemini', 'groq', 'cerebras', 'sambanova', 'openrouter', 'cloudflare', 'mistral', 'huggingface', 'vercel-gateway', 'openai', 'zen', 'ollama-cloud', 'bytez']) {
+        const p = registry.getProvider(name);
+        if (p) {
+          map.set(name, {
+            chat: async (req) => p.complete(req) as Promise<NormalizedResponse>,
+            stream: async function* (req) {
+              const queue: NormalizedStreamEvent[] = [];
+              let resolved = false;
+              const streamPromise = p.stream(req, async (chunk) => {
+                queue.push(chunk as NormalizedStreamEvent);
+              });
+              try {
+                await streamPromise;
+              } finally {
+                resolved = true;
+              }
+              while (queue.length > 0) {
+                yield queue.shift()!;
+              }
+            },
+          });
+        }
+      }
+      return new ExecutionEngine({
+        circuitBreaker: getCircuitBreaker(),
+        cooldown: getCooldown(),
+        fallback: getFallback(),
+        backpressure: getBackpressure(),
+        priorityQueue: getPriorityQueue(),
+        streamKeepalive: getStreamKeepalive(),
+        providerRegistry: map,
+        config: {},
+      });
+    })();
   }
   return _executionEngine;
-}
-
-function getProvidersSync(): Map<string, ProviderAdapter> {
-  const registry = getProviders();
-  const map = new Map<string, ProviderAdapter>();
-  for (const name of ['ollama', 'gemini', 'groq', 'cerebras', 'sambanova', 'openrouter', 'cloudflare', 'mistral', 'huggingface', 'vercel-gateway', 'openai', 'zen', 'ollama-cloud', 'bytez']) {
-    const p = registry.getProvider(name);
-    if (p) map.set(name, p as unknown as ProviderAdapter);
-  }
-  return map;
 }
 
 let _compression: CompressionEngine | null = null;
@@ -318,8 +346,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       return NextResponse.json({ error: { message: `Provider '${model.provider}' not registered`, type: 'internal_error' } }, { status: 501 });
     }
     candidates = [{
-      model: { id: model.id, provider: model.provider, displayName: model.displayName, contextWindow: model.contextWindow, capabilities: model.capabilities, inputPrice: model.inputPrice, outputPrice: model.outputPrice, enabled: model.enabled },
+      model,
       provider: { id: provider.name, name: provider.name, enabled: true },
+      capabilities: model.capabilities,
       qualityScore: 1,
       costScore: 1,
       latencyScore: 1,
@@ -365,7 +394,18 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     metadata: body.metadata as Record<string, unknown> | undefined,
   };
 
-  const executionEngine = getExecutionEngine();
+  const trace = createTrace(requestPayload, {
+    tags: (body.tags as string[]) || [],
+    tenant: body.user as string | undefined,
+    application: ((body.metadata as Record<string, unknown> | undefined)?.application as string) || undefined,
+  });
+  const authSpan = startSpan(trace, 'authentication');
+  endSpan(authSpan, 'ok');
+
+  const routingSpan = startSpan(trace, 'routing', undefined, { strategy: strategy as unknown as string, provider: providerName, model: selectedModelId });
+  endSpan(routingSpan, 'ok');
+
+  const executionEngine = await getExecutionEngine();
 
   // ── Non-streaming ─────────────────────────────────────────────────────
   if (!stream) {
@@ -374,17 +414,38 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const timeout = setTimeout(() => controller.abort(), timeoutMs);
     try {
       const start = Date.now();
+      const providerSpan = startSpan(trace, 'provider', undefined, { provider: providerName, model: selectedModelId, stream: false });
       const result = await executionEngine.executeWithReliability({
         request: requestPayload,
         candidates,
         stream: false,
       });
+      endSpan(providerSpan, 'ok');
       const latencyMs = Date.now() - start;
       clearTimeout(timeout);
 
-      const data = result as Record<string, unknown>;
+      const data = result as unknown as Record<string, unknown>;
       const choices = (data.choices || []) as Array<{ index?: number; message?: { role?: string; content?: string }; finish_reason?: string | null }>;
       const usage = (data.usage || {}) as { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number };
+
+      const responsePayload: NormalizedResponse = {
+        id: (data.id as string) || generateId(),
+        object: 'chat.completion',
+        created: (data.created as number) || Math.floor(Date.now() / 1000),
+        model: selectedModelId,
+        choices: [],
+        provider: providerName,
+        cost: data.cost as number | undefined,
+        usage: { prompt_tokens: usage.prompt_tokens ?? 0, completion_tokens: usage.completion_tokens ?? 0, total_tokens: usage.total_tokens ?? 0 },
+      };
+
+      finalizeTrace(trace, responsePayload);
+      const score = calculateScore(trace, undefined, {
+        selectedCandidateScore: candidates[0]?.qualityScore || 1,
+        estimatedMinimumLatencyMs: latencyMs,
+        estimatedMinimumCost: data.cost as number || 0,
+      });
+      void persistObservability(trace, score, latencyMs);
 
       return NextResponse.json({
         id: data.id || generateId(),
@@ -397,6 +458,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     } catch (err) {
       clearTimeout(timeout);
       const message = err instanceof Error ? err.message : 'Provider request failed';
+      finalizeTrace(trace, undefined, message);
+      void persistObservability(trace, { overall: 0, components: [], weights: {} }, 0);
       return NextResponse.json({ error: { message, type: 'provider_error', provider: providerName, code: 'PROVIDER_ERROR' } }, { status: 502 });
     }
   }
@@ -411,6 +474,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const sseStream = new ReadableStream({
     async start(rsController) {
       rsController.enqueue(encoder.encode(`data: ${JSON.stringify({ id, object: 'chat.completion.chunk', created, model: selectedModelId, choices: [{ index: 0, delta: { role: 'assistant' }, finish_reason: null }] })}\n\n`));
+      const providerSpan = startSpan(trace, 'provider', undefined, { provider: providerName, model: selectedModelId, stream: true });
+      let streamError: string | undefined;
       try {
         const streamIterator = executionEngine.executeStreamWithReliability({
           request: requestPayload,
@@ -421,10 +486,19 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           rsController.enqueue(encoder.encode(`data: ${JSON.stringify(chunk)}\n\n`));
         }
       } catch (err) {
-        const message = err instanceof Error ? err.message : 'Stream error';
-        rsController.enqueue(encoder.encode(`data: ${JSON.stringify({ id, object: 'chat.completion.chunk', created, model: selectedModelId, choices: [{ index: 0, delta: {}, finish_reason: 'stop' }], error: { message, type: 'provider_error' } })}\n\n`));
+        streamError = err instanceof Error ? err.message : 'Stream error';
+        endSpan(providerSpan, 'error', streamError);
+        rsController.enqueue(encoder.encode(`data: ${JSON.stringify({ id, object: 'chat.completion.chunk', created, model: selectedModelId, choices: [{ index: 0, delta: {}, finish_reason: 'stop' }], error: { message: streamError, type: 'provider_error' } })}\n\n`));
       } finally {
         clearTimeout(timeout);
+        if (!streamError) endSpan(providerSpan, 'ok');
+        const latencyMs = Date.now() - trace.startTime;
+        finalizeTrace(trace, { id, object: 'chat.completion', created, model: selectedModelId, choices: [] } as any, streamError);
+        const score = calculateScore(trace, undefined, {
+          selectedCandidateScore: candidates[0]?.qualityScore || 1,
+          estimatedMinimumLatencyMs: latencyMs,
+        });
+        void persistObservability(trace, score, latencyMs);
       }
       rsController.enqueue(encoder.encode('data: [DONE]\n\n'));
       rsController.close();
@@ -432,4 +506,48 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   });
 
   return new Response(sseStream, { headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive' } }) as unknown as NextResponse;
+}
+
+async function persistObservability(trace: any, score: any, latencyMs: number) {
+  try {
+    const { insertRequestTrace, insertTraceSpan, insertOptimizerScore } = await import('../../../../../imports');
+    await insertRequestTrace({
+      requestId: trace.requestId,
+      traceId: trace.traceId,
+      tenant: trace.tenant,
+      application: trace.application,
+      provider: trace.provider,
+      model: trace.model,
+      strategy: trace.strategy,
+      status: trace.status,
+      startTime: trace.startTime,
+      endTime: trace.endTime,
+      error: trace.error,
+      tags: trace.tags,
+      attributes: trace.attributes,
+    });
+    for (const span of trace.spans) {
+      await insertTraceSpan({
+        traceId: span.traceId,
+        requestId: trace.requestId,
+        parentSpanId: span.parentSpanId,
+        name: span.name,
+        startTime: span.startTime,
+        endTime: span.endTime,
+        attributes: span.attributes,
+        events: span.events,
+        status: span.status,
+        errorMessage: span.errorMessage,
+      });
+    }
+    await insertOptimizerScore({
+      traceId: trace.traceId,
+      requestId: trace.requestId,
+      overall: score.overall,
+      components: score.components,
+      weights: score.weights,
+    });
+  } catch {
+    // observability persistence is best-effort
+  }
 }

@@ -13,6 +13,7 @@ function makeCandidate(id: string, provider: string, contextWindow = 8192, capab
   return {
     model: { id, provider, displayName: id, contextWindow, capabilities, inputPrice: 0, outputPrice: 0, enabled: true },
     provider: { id: provider, name: provider, enabled: true },
+    capabilities,
     qualityScore: 1,
     costScore: 1,
     latencyScore: 1,

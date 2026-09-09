@@ -15,6 +15,9 @@
     "@bifrost/providers": "workspace:*",
     "@bifrost/routing": "workspace:*",
     "@bifrost/compression": "workspace:*",
+    "@bifrost/cache": "workspace:*",
+    "@bifrost/reliability": "workspace:*",
+    "@bifrost/policy": "workspace:*",
     "next": "^15.1.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"

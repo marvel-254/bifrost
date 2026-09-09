@@ -18,6 +18,17 @@ const T = {
 };
 
 // ── Hooks ───────────────────────────────────────────────────────────────────
+function useIsMobile(bp = 768) {
+  const [m, setM] = useState(false);
+  useEffect(() => {
+    const c = () => setM(window.innerWidth <= bp);
+    c();
+    window.addEventListener('resize', c);
+    return () => window.removeEventListener('resize', c);
+  }, [bp]);
+  return m;
+}
+
 function useRealtimeMetrics() {
   const [m, setM] = useState({ ...demoMetrics });
   useEffect(() => {
@@ -70,6 +81,7 @@ function useInView(threshold = 0.15) {
 function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const isMobile = useIsMobile();
   useEffect(() => {
     const h = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', h, { passive: true });
@@ -77,6 +89,7 @@ function Navbar() {
   }, []);
 
   return (
+    <>
     <nav role="navigation" aria-label="Main navigation" style={{
       position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
       background: scrolled ? 'rgba(9,9,11,0.88)' : 'transparent',
@@ -84,37 +97,60 @@ function Navbar() {
       borderBottom: scrolled ? `1px solid ${T.borderSubtle}` : '1px solid transparent',
       transition: 'all 0.3s ease',
     }}>
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
-          <a href="/" aria-label="Bifrost home" style={{ fontSize: 15, fontWeight: 800, color: T.text, letterSpacing: '-0.02em', textDecoration: 'none', fontFamily: T.mono }}>BIFROST</a>
-          <div className="nav-links" style={{ display: 'flex', gap: 24 }}>
-            {[
-              { label: 'Product', href: '#product' },
-              { label: 'Developers', href: '#developers' },
-              { label: 'Docs', href: '/docs' },
-            ].map(item => (
-              <a key={item.label} href={item.href} style={{ fontSize: 13, color: T.muted, textDecoration: 'none', transition: 'color 0.15s' }}
-                onMouseEnter={e => (e.currentTarget.style.color = T.text)}
-                onMouseLeave={e => (e.currentTarget.style.color = T.muted)}>
-                {item.label}
-              </a>
-            ))}
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '0 16px' : '0 24px', height: isMobile ? 56 : 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 12 : 32 }}>
+          <a href="/" aria-label="Bifrost home" style={{ fontSize: isMobile ? 14 : 15, fontWeight: 800, color: T.text, letterSpacing: '-0.02em', textDecoration: 'none', fontFamily: T.mono }}>BIFROST</a>
+          {!isMobile && (
+            <div style={{ display: 'flex', gap: 24 }}>
+              {[
+                { label: 'Product', href: '#product' },
+                { label: 'Developers', href: '#developers' },
+                { label: 'Docs', href: '/docs' },
+              ].map(item => (
+                <a key={item.label} href={item.href} style={{ fontSize: 13, color: T.muted, textDecoration: 'none', transition: 'color 0.15s' }}
+                  onMouseEnter={e => (e.currentTarget.style.color = T.text)}
+                  onMouseLeave={e => (e.currentTarget.style.color = T.muted)}>
+                  {item.label}
+                </a>
+              ))}
+            </div>
+          )}
+        </div>
+        {!isMobile ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <a href="/login" style={{ fontSize: 13, color: T.muted, textDecoration: 'none', padding: '6px 12px', transition: 'color 0.15s' }}
+              onMouseEnter={e => (e.currentTarget.style.color = T.text)}
+              onMouseLeave={e => (e.currentTarget.style.color = T.muted)}>
+              Sign in
+            </a>
+            <a href="/signup" style={{ fontSize: 13, fontWeight: 600, color: T.bg, background: T.text, textDecoration: 'none', padding: '7px 16px', borderRadius: 6, transition: 'opacity 0.15s' }}
+              onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
+              onMouseLeave={e => (e.currentTarget.style.opacity = '1')}>
+              Get Started
+            </a>
           </div>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }} className="nav-actions">
-          <a href="/login" style={{ fontSize: 13, color: T.muted, textDecoration: 'none', padding: '6px 12px', transition: 'color 0.15s' }}
-            onMouseEnter={e => (e.currentTarget.style.color = T.text)}
-            onMouseLeave={e => (e.currentTarget.style.color = T.muted)}>
-            Sign in
-          </a>
-          <a href="/signup" style={{ fontSize: 13, fontWeight: 600, color: T.bg, background: T.text, textDecoration: 'none', padding: '7px 16px', borderRadius: 6, transition: 'opacity 0.15s' }}
-            onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
-            onMouseLeave={e => (e.currentTarget.style.opacity = '1')}>
-            Get Started
-          </a>
-        </div>
+        ) : (
+          <button onClick={() => setMobileOpen(!mobileOpen)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 8, display: 'flex', flexDirection: 'column', gap: 5 }}>
+            <span style={{ width: 20, height: 2, background: T.text, transition: 'all 0.2s', transform: mobileOpen ? 'rotate(45deg) translateY(7px)' : 'none' }} />
+            <span style={{ width: 20, height: 2, background: T.text, transition: 'all 0.2s', opacity: mobileOpen ? 0 : 1 }} />
+            <span style={{ width: 20, height: 2, background: T.text, transition: 'all 0.2s', transform: mobileOpen ? 'rotate(-45deg) translateY(-7px)' : 'none' }} />
+          </button>
+        )}
       </div>
     </nav>
+    {mobileOpen && (
+      <div style={{ position: 'fixed', top: isMobile ? 56 : 64, left: 0, right: 0, zIndex: 99, background: 'rgba(9,9,11,0.98)', borderBottom: `1px solid ${T.border}`, padding: '16px 24px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <a href="#product" onClick={() => setMobileOpen(false)} style={{ fontSize: 15, color: T.text, textDecoration: 'none' }}>Product</a>
+          <a href="#developers" onClick={() => setMobileOpen(false)} style={{ fontSize: 15, color: T.text, textDecoration: 'none' }}>Developers</a>
+          <a href="/docs" onClick={() => setMobileOpen(false)} style={{ fontSize: 15, color: T.text, textDecoration: 'none' }}>Docs</a>
+          <hr style={{ border: 'none', borderTop: `1px solid ${T.border}`, margin: 0 }} />
+          <a href="/login" style={{ fontSize: 15, color: T.muted, textDecoration: 'none' }}>Sign in</a>
+          <a href="/signup" style={{ fontSize: 15, fontWeight: 600, color: T.bg, background: T.text, textDecoration: 'none', padding: '10px 20px', borderRadius: 6, textAlign: 'center' }}>Get Started</a>
+        </div>
+      </div>
+    )}
+    </>
   );
 }
 
@@ -124,6 +160,7 @@ function Hero() {
   const reqNum = useAnimatedNumber(metrics.requests, 600);
   const tokNum = useAnimatedNumber(metrics.tokens, 600);
   const [activeStep, setActiveStep] = useState(0);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     const iv = setInterval(() => setActiveStep(p => (p + 1) % product.pipeline.length), 700);
@@ -131,33 +168,33 @@ function Hero() {
   }, []);
 
   return (
-    <section aria-label="Hero" style={{ paddingTop: 120, paddingBottom: 80, position: 'relative', overflow: 'hidden' }}>
+    <section aria-label="Hero" style={{ paddingTop: isMobile ? 80 : 120, paddingBottom: isMobile ? 40 : 80, position: 'relative', overflow: 'hidden' }}>
       <div style={{ position: 'absolute', inset: 0, backgroundImage: `linear-gradient(${T.borderSubtle} 1px, transparent 1px), linear-gradient(90deg, ${T.borderSubtle} 1px, transparent 1px)`, backgroundSize: '60px 60px', opacity: 0.3 }} />
       <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 800px 600px at 50% 30%, rgba(34,197,94,0.06), transparent)' }} />
 
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px', position: 'relative' }}>
-        <div style={{ textAlign: 'center', marginBottom: 64 }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '5px 14px', background: T.card, border: `1px solid ${T.border}`, borderRadius: 20, marginBottom: 24 }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '0 16px' : '0 24px', position: 'relative' }}>
+        <div style={{ textAlign: 'center', marginBottom: isMobile ? 32 : 64 }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '5px 14px', background: T.card, border: `1px solid ${T.border}`, borderRadius: 20, marginBottom: isMobile ? 16 : 24 }}>
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: T.accent, boxShadow: `0 0 8px ${T.accent}` }} />
             <span style={{ fontSize: 11, color: T.muted, fontFamily: T.mono }}>{metrics.requestsPerMin} req/min</span>
           </div>
 
-          <h1 style={{ fontSize: 'clamp(36px, 5vw, 64px)', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.1, margin: '0 0 16px', color: T.text }}>
+          <h1 style={{ fontSize: isMobile ? 32 : 'clamp(36px, 5vw, 64px)', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.1, margin: '0 0 16px', color: T.text }}>
             One API for every model.
           </h1>
-          <p style={{ fontSize: 'clamp(16px, 2vw, 22px)', color: T.muted, maxWidth: 640, margin: '0 auto 12px', lineHeight: 1.5 }}>
+          <p style={{ fontSize: isMobile ? 15 : 'clamp(16px, 2vw, 22px)', color: T.muted, maxWidth: 640, margin: '0 auto 12px', lineHeight: 1.5 }}>
             {product.subline}
           </p>
-          <p style={{ fontSize: 14, color: T.dim, maxWidth: 580, margin: '0 auto 40px', lineHeight: 1.7 }}>
+          <p style={{ fontSize: isMobile ? 13 : 14, color: T.dim, maxWidth: 580, margin: '0 auto 40px', lineHeight: 1.7, padding: isMobile ? '0 8px' : 0 }}>
             {product.longDescription}
           </p>
 
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <a href="/signup" style={{ padding: '10px 24px', background: T.text, color: T.bg, fontSize: 14, fontWeight: 600, textDecoration: 'none', borderRadius: 6, transition: 'opacity 0.15s' }}
+            <a href="/signup" style={{ padding: isMobile ? '10px 20px' : '10px 24px', background: T.text, color: T.bg, fontSize: isMobile ? 13 : 14, fontWeight: 600, textDecoration: 'none', borderRadius: 6, transition: 'opacity 0.15s' }}
               onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')} onMouseLeave={e => (e.currentTarget.style.opacity = '1')}>
               Start Building
             </a>
-            <a href="#architecture" style={{ padding: '10px 24px', background: 'transparent', color: T.muted, fontSize: 14, border: `1px solid ${T.border}`, textDecoration: 'none', borderRadius: 6, transition: 'all 0.15s' }}
+            <a href="#architecture" style={{ padding: isMobile ? '10px 20px' : '10px 24px', background: 'transparent', color: T.muted, fontSize: isMobile ? 13 : 14, border: `1px solid ${T.border}`, textDecoration: 'none', borderRadius: 6, transition: 'all 0.15s' }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = T.dim; e.currentTarget.style.color = T.text; }}
               onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.muted; }}>
               View Architecture
@@ -166,12 +203,12 @@ function Hero() {
         </div>
 
         {/* Pipeline animation */}
-        <div id="architecture" style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 12, padding: '32px 24px', marginBottom: 48 }}>
-          <div role="img" aria-label="Bifrost execution pipeline visualization" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, flexWrap: 'wrap', marginBottom: 20 }}>
+        <div id="architecture" style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 12, padding: isMobile ? '16px 12px' : '32px 24px', marginBottom: isMobile ? 24 : 48 }}>
+          <div role="img" aria-label="Bifrost execution pipeline visualization" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: isMobile ? 2 : 4, flexWrap: 'wrap', marginBottom: isMobile ? 12 : 20 }}>
             {product.pipeline.map((step, i) => (
-              <div key={step} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <div key={step} style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 2 : 4 }}>
                 <div style={{
-                  padding: '6px 12px', fontSize: 11, fontFamily: T.mono, fontWeight: 600, letterSpacing: '0.04em',
+                  padding: isMobile ? '4px 6px' : '6px 12px', fontSize: isMobile ? 8 : 11, fontFamily: T.mono, fontWeight: 600, letterSpacing: '0.04em',
                   background: i === activeStep ? `${T.accent}18` : i < activeStep ? `${T.accent}08` : 'transparent',
                   border: `1px solid ${i === activeStep ? T.accent : i < activeStep ? `${T.accent}40` : T.border}`,
                   color: i === activeStep ? T.accent : i < activeStep ? `${T.accent}aa` : T.dim,
@@ -180,17 +217,17 @@ function Hero() {
                   {step}
                 </div>
                 {i < product.pipeline.length - 1 && (
-                  <span style={{ color: i < activeStep ? T.accent : T.dim, fontSize: 10, transition: 'color 0.3s' }}>→</span>
+                  <span style={{ color: i < activeStep ? T.accent : T.dim, fontSize: isMobile ? 8 : 10, transition: 'color 0.3s' }}>→</span>
                 )}
               </div>
             ))}
           </div>
 
           {/* Code panel + Decision */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, maxWidth: 900, margin: '0 auto' }}>
-            <div style={{ background: T.bg, border: `1px solid ${T.borderSubtle}`, borderRadius: 8, padding: 16 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 12 : 16, maxWidth: 900, margin: '0 auto' }}>
+            <div style={{ background: T.bg, border: `1px solid ${T.borderSubtle}`, borderRadius: 8, padding: isMobile ? 12 : 16 }}>
               <div style={{ fontSize: 10, color: T.dim, fontFamily: T.mono, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Request</div>
-              <pre style={{ fontSize: 12, fontFamily: T.mono, color: T.muted, lineHeight: 1.6, margin: 0, overflowX: 'auto' }}>
+              <pre style={{ fontSize: isMobile ? 10 : 12, fontFamily: T.mono, color: T.muted, lineHeight: 1.6, margin: 0, overflowX: 'auto' }}>
 {`POST /v1/chat/completions
 
 {
@@ -202,9 +239,9 @@ function Hero() {
 }`}
               </pre>
             </div>
-            <div style={{ background: T.bg, border: `1px solid ${T.borderSubtle}`, borderRadius: 8, padding: 16 }}>
+            <div style={{ background: T.bg, border: `1px solid ${T.borderSubtle}`, borderRadius: 8, padding: isMobile ? 12 : 16 }}>
               <div style={{ fontSize: 10, color: T.dim, fontFamily: T.mono, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Bifrost Decision</div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 16px', fontSize: 12, fontFamily: T.mono }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 16px', fontSize: isMobile ? 10 : 12, fontFamily: T.mono }}>
                 <span style={{ color: T.dim }}>Model</span><span style={{ color: T.text }}>Claude Sonnet 4</span>
                 <span style={{ color: T.dim }}>Provider</span><span style={{ color: T.text }}>Anthropic</span>
                 <span style={{ color: T.dim }}>Route score</span><span style={{ color: T.accent }}>94</span>
@@ -218,16 +255,16 @@ function Hero() {
         </div>
 
         {/* Metric strip */}
-        <div role="region" aria-label="Key metrics" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1, background: T.borderSubtle, borderRadius: 8, overflow: 'hidden' }}>
+        <div role="region" aria-label="Key metrics" style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, 1fr)', gap: 1, background: T.borderSubtle, borderRadius: 8, overflow: 'hidden' }}>
           {[
-            { label: 'Providers', value: '14+', color: T.text },
+            { label: 'Providers', value: '38+', color: T.text },
             { label: 'Token Reduction', value: `${demoMetrics.compressionRate.toFixed(1)}%`, color: T.cyan },
             { label: 'Cache Hit Rate', value: `${((metrics.cacheHits / metrics.requests) * 100).toFixed(1)}%`, color: T.accent },
             { label: 'Routing Reliability', value: `${demoMetrics.uptime}%`, color: T.accent },
           ].map((item, i) => (
-            <div key={i} style={{ background: T.card, padding: '16px 20px', textAlign: 'center' }}>
-              <div style={{ fontSize: 24, fontWeight: 700, fontFamily: T.mono, color: item.color, letterSpacing: '-0.02em' }}>{item.value}</div>
-              <div style={{ fontSize: 11, color: T.dim, marginTop: 4, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{item.label}</div>
+            <div key={i} style={{ background: T.card, padding: isMobile ? '12px 10px' : '16px 20px', textAlign: 'center' }}>
+              <div style={{ fontSize: isMobile ? 18 : 24, fontWeight: 700, fontFamily: T.mono, color: item.color, letterSpacing: '-0.02em' }}>{item.value}</div>
+              <div style={{ fontSize: isMobile ? 9 : 11, color: T.dim, marginTop: 4, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{item.label}</div>
             </div>
           ))}
         </div>
@@ -239,19 +276,20 @@ function Hero() {
 // ── Core Capabilities ───────────────────────────────────────────────────────
 function Capabilities() {
   const { ref, visible } = useInView();
+  const isMobile = useIsMobile();
   return (
-    <section id="product" ref={ref} aria-label="Core capabilities" style={{ padding: '96px 0', borderTop: `1px solid ${T.borderSubtle}` }}>
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px' }}>
-        <h2 style={{ fontSize: 'clamp(28px, 3.5vw, 40px)', fontWeight: 700, letterSpacing: '-0.02em', textAlign: 'center', margin: '0 0 12px', color: T.text }}>
+    <section id="product" ref={ref} aria-label="Core capabilities" style={{ padding: isMobile ? '64px 0' : '96px 0', borderTop: `1px solid ${T.borderSubtle}` }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '0 16px' : '0 24px' }}>
+        <h2 style={{ fontSize: isMobile ? 24 : 'clamp(28px, 3.5vw, 40px)', fontWeight: 700, letterSpacing: '-0.02em', textAlign: 'center', margin: '0 0 12px', color: T.text }}>
           AI infrastructure should optimize itself.
         </h2>
-        <p style={{ fontSize: 15, color: T.muted, textAlign: 'center', maxWidth: 520, margin: '0 auto 56px', lineHeight: 1.6 }}>
+        <p style={{ fontSize: isMobile ? 14 : 15, color: T.muted, textAlign: 'center', maxWidth: 520, margin: '0 auto 40px', lineHeight: 1.6 }}>
           Bifrost handles routing, optimization, caching, recovery, control, and observability — so your application can focus on product.
         </p>
-        <div role="list" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, maxWidth: 1000, margin: '0 auto' }}>
+        <div role="list" style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: isMobile ? 12 : 16, maxWidth: 1000, margin: '0 auto' }}>
           {product.features.map((f, i) => (
             <div key={f.id} role="listitem" style={{
-              background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, padding: 24,
+              background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, padding: isMobile ? 16 : 24,
               opacity: visible ? 1 : 0, transform: visible ? 'translateY(0)' : 'translateY(16px)',
               transition: `all 0.5s ease ${i * 0.08}s`,
             }}
@@ -260,8 +298,8 @@ function Capabilities() {
               <div style={{ width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', background: `${T.accent}10`, borderRadius: 6, marginBottom: 14, fontSize: 14, color: T.accent, fontFamily: T.mono, fontWeight: 700 }}>
                 {String(i + 1).padStart(2, '0')}
               </div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: T.text, marginBottom: 8 }}>{f.title}</div>
-              <div style={{ fontSize: 13, color: T.muted, lineHeight: 1.6 }}>{f.description}</div>
+              <div style={{ fontSize: isMobile ? 14 : 15, fontWeight: 700, color: T.text, marginBottom: 8 }}>{f.title}</div>
+              <div style={{ fontSize: isMobile ? 12 : 13, color: T.muted, lineHeight: 1.6 }}>{f.description}</div>
             </div>
           ))}
         </div>
@@ -272,29 +310,30 @@ function Capabilities() {
 
 // ── Provider Network ────────────────────────────────────────────────────────
 function Providers() {
+  const isMobile = useIsMobile();
   return (
-    <section id="providers" style={{ padding: '96px 0', borderTop: `1px solid ${T.borderSubtle}` }}>
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px' }}>
-        <h2 style={{ fontSize: 'clamp(28px, 3.5vw, 40px)', fontWeight: 700, letterSpacing: '-0.02em', textAlign: 'center', margin: '0 0 12px', color: T.text }}>
+    <section id="providers" style={{ padding: isMobile ? '64px 0' : '96px 0', borderTop: `1px solid ${T.borderSubtle}` }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '0 16px' : '0 24px' }}>
+        <h2 style={{ fontSize: isMobile ? 24 : 'clamp(28px, 3.5vw, 40px)', fontWeight: 700, letterSpacing: '-0.02em', textAlign: 'center', margin: '0 0 12px', color: T.text }}>
           Your models. One gateway.
         </h2>
-        <p style={{ fontSize: 15, color: T.muted, textAlign: 'center', maxWidth: 480, margin: '0 auto 48px', lineHeight: 1.6 }}>
+        <p style={{ fontSize: isMobile ? 14 : 15, color: T.muted, textAlign: 'center', maxWidth: 480, margin: '0 auto 40px', lineHeight: 1.6 }}>
           No provider lock-in. No application rewrites. Add any OpenAI-compatible endpoint.
         </p>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, justifyContent: 'center', marginBottom: 40 }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center', marginBottom: isMobile ? 24 : 40 }}>
           {product.providers.map((p, i) => (
-            <div key={i} style={{ padding: '8px 16px', background: T.card, border: `1px solid ${T.border}`, borderRadius: 6, fontSize: 13, color: T.muted, transition: 'all 0.15s', cursor: 'default' }}
+            <div key={i} style={{ padding: isMobile ? '6px 12px' : '8px 16px', background: T.card, border: `1px solid ${T.border}`, borderRadius: 6, fontSize: isMobile ? 12 : 13, color: T.muted, transition: 'all 0.15s', cursor: 'default' }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = T.accent; e.currentTarget.style.color = T.text; }}
               onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.muted; }}>
               {p.name}
             </div>
           ))}
         </div>
-        <div style={{ maxWidth: 600, margin: '0 auto', background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, padding: 24 }}>
+        <div style={{ maxWidth: 600, margin: '0 auto', background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, padding: isMobile ? 16 : 24 }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center' }}>
             {['YOUR APPLICATION', 'BIFROST API', 'MULTIPLE PROVIDERS', 'MULTIPLE ACCOUNTS'].map((step, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ padding: '8px 20px', background: i === 1 ? `${T.accent}15` : T.elevated, border: `1px solid ${i === 1 ? T.accent : T.border}`, borderRadius: 4, fontSize: 12, fontFamily: T.mono, fontWeight: 600, color: i === 1 ? T.accent : T.muted, letterSpacing: '0.04em' }}>
+                <div style={{ padding: isMobile ? '6px 14px' : '8px 20px', background: i === 1 ? `${T.accent}15` : T.elevated, border: `1px solid ${i === 1 ? T.accent : T.border}`, borderRadius: 4, fontSize: isMobile ? 10 : 12, fontFamily: T.mono, fontWeight: 600, color: i === 1 ? T.accent : T.muted, letterSpacing: '0.04em' }}>
                   {step}
                 </div>
                 {i < 3 && <span style={{ color: T.dim, fontSize: 10 }}>↓</span>}
@@ -312,13 +351,14 @@ function Optimization() {
   const { ref, visible } = useInView(0.2);
   const [bar1, setBar1] = useState(0);
   const [bar2, setBar2] = useState(0);
+  const isMobile = useIsMobile();
   useEffect(() => {
     if (visible) { setTimeout(() => setBar1(100), 200); setTimeout(() => setBar2(65), 600); }
   }, [visible]);
 
   return (
-    <section id="optimization" ref={ref} style={{ padding: '96px 0', borderTop: `1px solid ${T.borderSubtle}` }}>
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px' }}>
+    <section id="optimization" ref={ref} style={{ padding: isMobile ? '64px 0' : '96px 0', borderTop: `1px solid ${T.borderSubtle}` }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '0 16px' : '0 24px' }}>
         <h2 style={{ fontSize: 'clamp(28px, 3.5vw, 40px)', fontWeight: 700, letterSpacing: '-0.02em', textAlign: 'center', margin: '0 0 12px', color: T.text }}>
           Stop paying to repeat yourself.
         </h2>
@@ -358,7 +398,7 @@ function Optimization() {
             <div style={{ fontSize: 32, fontWeight: 800, fontFamily: T.mono, color: T.accent, letterSpacing: '-0.02em' }}>34.8% fewer tokens</div>
             <div style={{ fontSize: 12, color: T.dim, marginTop: 4 }}>Demonstration values — actual compression varies by request</div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 24 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 16, marginTop: 24 }}>
             {['Prompt Compression', 'Tool Output Compression', 'Semantic Cache', 'Recoverable Context', 'Context Dependency Graph', 'Context Garbage Collection'].map(f => (
               <div key={f} style={{ padding: '10px 14px', background: T.card, border: `1px solid ${T.borderSubtle}`, borderRadius: 6, fontSize: 12, color: T.muted, fontFamily: T.mono }}>
                 <span style={{ color: T.accent, marginRight: 6 }}>✓</span>{f}
@@ -374,16 +414,17 @@ function Optimization() {
 // ── Routing ─────────────────────────────────────────────────────────────────
 function Routing() {
   const [selected, setSelected] = useState(0);
+  const isMobile = useIsMobile();
   return (
-    <section id="routing" style={{ padding: '96px 0', borderTop: `1px solid ${T.borderSubtle}` }}>
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px' }}>
+    <section id="routing" style={{ padding: isMobile ? '64px 0' : '96px 0', borderTop: `1px solid ${T.borderSubtle}` }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '0 16px' : '0 24px' }}>
         <h2 style={{ fontSize: 'clamp(28px, 3.5vw, 40px)', fontWeight: 700, letterSpacing: '-0.02em', textAlign: 'center', margin: '0 0 12px', color: T.text }}>
           Never depend on one model.
         </h2>
         <p style={{ fontSize: 15, color: T.muted, textAlign: 'center', maxWidth: 520, margin: '0 auto 56px', lineHeight: 1.6 }}>
           Bifrost evaluates candidates on capability, quality, latency, cost, and health — then picks the winner.
         </p>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 24, maxWidth: 900, margin: '0 auto' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 340px', gap: 24, maxWidth: 900, margin: '0 auto' }}>
           <div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {demoRoutingCandidates.map((c, i) => (
@@ -416,7 +457,7 @@ function Routing() {
             </div>
           </div>
           <div>
-            <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, padding: 24, position: 'sticky', top: 100 }}>
+            <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, padding: isMobile ? 16 : 24, position: 'sticky', top: 100 }}>
               <div style={{ fontSize: 10, color: T.dim, fontFamily: T.mono, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 12 }}>WHY {demoRoutingCandidates[selected].name.split(' ')[0]}?</div>
               {demoRouteDecision.factors.map((r, i) => (
                 <div key={i} style={{ marginBottom: 6 }}>
@@ -444,16 +485,17 @@ function Routing() {
 // ── Optimizer Score ─────────────────────────────────────────────────────────
 function OptimizerScore() {
   const { ref, visible } = useInView(0.2);
+  const isMobile = useIsMobile();
   return (
-    <section ref={ref} style={{ padding: '96px 0', borderTop: `1px solid ${T.borderSubtle}` }}>
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px', textAlign: 'center' }}>
-        <h2 style={{ fontSize: 'clamp(28px, 3.5vw, 40px)', fontWeight: 700, letterSpacing: '-0.02em', margin: '0 0 12px', color: T.text }}>
+    <section ref={ref} style={{ padding: isMobile ? '64px 0' : '96px 0', borderTop: `1px solid ${T.borderSubtle}` }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '0 16px' : '0 24px', textAlign: 'center' }}>
+        <h2 style={{ fontSize: isMobile ? 24 : 'clamp(28px, 3.5vw, 40px)', fontWeight: 700, letterSpacing: '-0.02em', margin: '0 0 12px', color: T.text }}>
           Bifrost Optimizer Score
         </h2>
-        <p style={{ fontSize: 15, color: T.muted, maxWidth: 480, margin: '0 auto 48px', lineHeight: 1.6 }}>
+        <p style={{ fontSize: isMobile ? 14 : 15, color: T.muted, maxWidth: 480, margin: '0 auto 48px', lineHeight: 1.6 }}>
           A composite measure of how well Bifrost is optimizing your requests.
         </p>
-        <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', background: T.card, border: `1px solid ${T.border}`, borderRadius: 16, padding: '40px 60px' }}>
+        <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', background: T.card, border: `1px solid ${T.border}`, borderRadius: 16, padding: isMobile ? '24px 20px' : '40px 60px' }}>
           <div style={{ fontSize: 64, fontWeight: 800, fontFamily: T.mono, color: T.accent, letterSpacing: '-0.03em', lineHeight: 1 }}>
             {demoOptimizerScore.total}
           </div>
@@ -478,6 +520,7 @@ function OptimizerScore() {
 // ── Reliability ─────────────────────────────────────────────────────────────
 function Reliability() {
   const [activeStep, setActiveStep] = useState(0);
+  const isMobile = useIsMobile();
   const steps = [
     { label: 'REQUEST', color: T.text },
     { label: 'PROVIDER A', color: T.text },
@@ -492,15 +535,15 @@ function Reliability() {
   }, []);
 
   return (
-    <section id="reliability" style={{ padding: '96px 0', borderTop: `1px solid ${T.borderSubtle}` }}>
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px' }}>
-        <h2 style={{ fontSize: 'clamp(28px, 3.5vw, 40px)', fontWeight: 700, letterSpacing: '-0.02em', textAlign: 'center', margin: '0 0 12px', color: T.text }}>
+    <section id="reliability" style={{ padding: isMobile ? '64px 0' : '96px 0', borderTop: `1px solid ${T.borderSubtle}` }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '0 16px' : '0 24px' }}>
+        <h2 style={{ fontSize: isMobile ? 24 : 'clamp(28px, 3.5vw, 40px)', fontWeight: 700, letterSpacing: '-0.02em', textAlign: 'center', margin: '0 0 12px', color: T.text }}>
           When providers fail, your application shouldn&apos;t.
         </h2>
-        <p style={{ fontSize: 15, color: T.muted, textAlign: 'center', maxWidth: 520, margin: '0 auto 56px', lineHeight: 1.6 }}>
+        <p style={{ fontSize: isMobile ? 14 : 15, color: T.muted, textAlign: 'center', maxWidth: 520, margin: '0 auto 56px', lineHeight: 1.6 }}>
           Automatic fallback, circuit breakers, self-healing, and multi-account rotation.
         </p>
-        <div style={{ maxWidth: 700, margin: '0 auto 48px', background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, padding: 28 }}>
+        <div style={{ maxWidth: 700, margin: '0 auto 48px', background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, padding: isMobile ? 16 : 28 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, flexWrap: 'wrap' }}>
             {steps.map((s, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -528,6 +571,7 @@ function Reliability() {
 
 // ── Context Intelligence ────────────────────────────────────────────────────
 function ContextIntelligence() {
+  const isMobile = useIsMobile();
   const graph = [
     { label: 'User Request', color: T.accent },
     { label: 'Documents', color: T.cyan },
@@ -537,15 +581,15 @@ function ContextIntelligence() {
     { label: 'Dependencies', color: T.text },
   ];
   return (
-    <section style={{ padding: '96px 0', borderTop: `1px solid ${T.borderSubtle}` }}>
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px' }}>
-        <h2 style={{ fontSize: 'clamp(28px, 3.5vw, 40px)', fontWeight: 700, letterSpacing: '-0.02em', textAlign: 'center', margin: '0 0 12px', color: T.text }}>
+    <section style={{ padding: isMobile ? '64px 0' : '96px 0', borderTop: `1px solid ${T.borderSubtle}` }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '0 16px' : '0 24px' }}>
+        <h2 style={{ fontSize: isMobile ? 24 : 'clamp(28px, 3.5vw, 40px)', fontWeight: 700, letterSpacing: '-0.02em', textAlign: 'center', margin: '0 0 12px', color: T.text }}>
           Context intelligence, not context deletion.
         </h2>
-        <p style={{ fontSize: 15, color: T.muted, textAlign: 'center', maxWidth: 520, margin: '0 auto 56px', lineHeight: 1.6 }}>
+        <p style={{ fontSize: isMobile ? 14 : 15, color: T.muted, textAlign: 'center', maxWidth: 520, margin: '0 auto 56px', lineHeight: 1.6 }}>
           Bifrost builds a dependency graph of your context, then recovers what it prunes.
         </p>
-        <div style={{ maxWidth: 600, margin: '0 auto', background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, padding: 24 }}>
+        <div style={{ maxWidth: 600, margin: '0 auto', background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, padding: isMobile ? 16 : 24 }}>
           <div style={{ fontSize: 10, color: T.dim, fontFamily: T.mono, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 12 }}>CONTEXT DEPENDENCY GRAPH</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {graph.map((g, i) => (
@@ -556,7 +600,7 @@ function ContextIntelligence() {
               </div>
             ))}
           </div>
-          <div style={{ marginTop: 16, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          <div style={{ marginTop: 16, display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 10 }}>
             <div style={{ padding: '10px 14px', background: `${T.accent}08`, border: `1px solid ${T.accent}30`, borderRadius: 6, textAlign: 'center' }}>
               <div style={{ fontSize: 11, color: T.accent, fontFamily: T.mono, fontWeight: 600 }}>RECOVERABLE</div>
               <div style={{ fontSize: 11, color: T.dim, marginTop: 2 }}>Restored on demand</div>
@@ -574,13 +618,14 @@ function ContextIntelligence() {
 
 // ── Quota Intelligence ──────────────────────────────────────────────────────
 function QuotaIntelligence() {
+  const isMobile = useIsMobile();
   return (
-    <section style={{ padding: '96px 0', borderTop: `1px solid ${T.borderSubtle}` }}>
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px' }}>
-        <h2 style={{ fontSize: 'clamp(28px, 3.5vw, 40px)', fontWeight: 700, letterSpacing: '-0.02em', textAlign: 'center', margin: '0 0 12px', color: T.text }}>
+    <section style={{ padding: isMobile ? '64px 0' : '96px 0', borderTop: `1px solid ${T.borderSubtle}` }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '0 16px' : '0 24px' }}>
+        <h2 style={{ fontSize: isMobile ? 24 : 'clamp(28px, 3.5vw, 40px)', fontWeight: 700, letterSpacing: '-0.02em', textAlign: 'center', margin: '0 0 12px', color: T.text }}>
           Use every available unit of AI capacity.
         </h2>
-        <p style={{ fontSize: 15, color: T.muted, textAlign: 'center', maxWidth: 520, margin: '0 auto 56px', lineHeight: 1.6 }}>
+        <p style={{ fontSize: isMobile ? 14 : 15, color: T.muted, textAlign: 'center', maxWidth: 520, margin: '0 auto 56px', lineHeight: 1.6 }}>
           Multi-account rotation, quota forecasting, and cost optimization across providers.
         </p>
         <div style={{ maxWidth: 500, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -612,6 +657,7 @@ function QuotaIntelligence() {
 // ── Policy ──────────────────────────────────────────────────────────────────
 function Policy() {
   const [showYaml, setShowYaml] = useState(false);
+  const isMobile = useIsMobile();
   const yaml = `policy: production-coding
 when:
   tag: coding
@@ -628,12 +674,12 @@ prefer:
 fallback: automatic`;
 
   return (
-    <section id="policy" style={{ padding: '96px 0', borderTop: `1px solid ${T.borderSubtle}` }}>
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px' }}>
-        <h2 style={{ fontSize: 'clamp(28px, 3.5vw, 40px)', fontWeight: 700, letterSpacing: '-0.02em', textAlign: 'center', margin: '0 0 12px', color: T.text }}>
+    <section id="policy" style={{ padding: isMobile ? '64px 0' : '96px 0', borderTop: `1px solid ${T.borderSubtle}` }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '0 16px' : '0 24px' }}>
+        <h2 style={{ fontSize: isMobile ? 24 : 'clamp(28px, 3.5vw, 40px)', fontWeight: 700, letterSpacing: '-0.02em', textAlign: 'center', margin: '0 0 12px', color: T.text }}>
           Put your AI infrastructure on policy.
         </h2>
-        <p style={{ fontSize: 15, color: T.muted, textAlign: 'center', maxWidth: 520, margin: '0 auto 56px', lineHeight: 1.6 }}>
+        <p style={{ fontSize: isMobile ? 14 : 15, color: T.muted, textAlign: 'center', maxWidth: 520, margin: '0 auto 56px', lineHeight: 1.6 }}>
           Policy-as-code. Data residency. Tenant isolation. Spend guardrails.
         </p>
         <div style={{ maxWidth: 600, margin: '0 auto' }}>
@@ -686,6 +732,7 @@ fallback: automatic`;
 
 // ── Observability ───────────────────────────────────────────────────────────
 function Observability() {
+  const isMobile = useIsMobile();
   const [log, setLog] = useState<Array<{ id: string; model: string; provider: string; latency: number; tokens: number; status: string; time: string }>>([]);
   const idRef = useRef(0);
   useEffect(() => {
@@ -706,12 +753,12 @@ function Observability() {
   }, []);
 
   return (
-    <section id="observability" style={{ padding: '96px 0', borderTop: `1px solid ${T.borderSubtle}` }}>
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px' }}>
-        <h2 style={{ fontSize: 'clamp(28px, 3.5vw, 40px)', fontWeight: 700, letterSpacing: '-0.02em', textAlign: 'center', margin: '0 0 12px', color: T.text }}>
+    <section id="observability" style={{ padding: isMobile ? '64px 0' : '96px 0', borderTop: `1px solid ${T.borderSubtle}` }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '0 16px' : '0 24px' }}>
+        <h2 style={{ fontSize: isMobile ? 24 : 'clamp(28px, 3.5vw, 40px)', fontWeight: 700, letterSpacing: '-0.02em', textAlign: 'center', margin: '0 0 12px', color: T.text }}>
           Every decision is explainable.
         </h2>
-        <p style={{ fontSize: 15, color: T.muted, textAlign: 'center', maxWidth: 520, margin: '0 auto 56px', lineHeight: 1.6 }}>
+        <p style={{ fontSize: isMobile ? 14 : 15, color: T.muted, textAlign: 'center', maxWidth: 520, margin: '0 auto 56px', lineHeight: 1.6 }}>
           Trace every routing decision, token usage, fallback, and cost in real time.
         </p>
         <div style={{ maxWidth: 800, margin: '0 auto', background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, overflow: 'hidden' }}>
@@ -723,15 +770,15 @@ function Observability() {
             {log.map((l, i) => (
               <div key={l.id} style={{
                 padding: '8px 16px', borderBottom: `1px solid ${T.borderSubtle}`,
-                display: 'grid', gridTemplateColumns: '70px 1fr 100px 80px 60px 50px',
+                display: 'grid', gridTemplateColumns: isMobile ? '60px 1fr 70px 50px' : '70px 1fr 100px 80px 60px 50px',
                 gap: 8, alignItems: 'center', opacity: i === 0 ? 1 : Math.max(0.3, 1 - i * 0.08),
                 background: i === 0 ? `${T.accent}06` : 'transparent', transition: 'opacity 0.3s',
               }}>
                 <span style={{ color: T.dim }}>{l.time}</span>
                 <span style={{ color: T.text }}>{l.model}</span>
-                <span style={{ color: T.dim }}>{l.provider}</span>
+                {!isMobile && <span style={{ color: T.dim }}>{l.provider}</span>}
                 <span style={{ color: l.latency < 600 ? T.accent : l.latency < 900 ? T.cyan : T.amber }}>{l.latency}ms</span>
-                <span style={{ color: T.dim }}>{l.tokens}t</span>
+                {!isMobile && <span style={{ color: T.dim }}>{l.tokens}t</span>}
                 <span style={{ color: l.status === '200' ? T.accent : T.red }}>{l.status}</span>
               </div>
             ))}
@@ -745,16 +792,17 @@ function Observability() {
 // ── Request Trace ───────────────────────────────────────────────────────────
 function RequestTrace() {
   const [expanded, setExpanded] = useState<number | null>(null);
+  const isMobile = useIsMobile();
   return (
-    <section style={{ padding: '96px 0', borderTop: `1px solid ${T.borderSubtle}` }}>
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px' }}>
-        <h2 style={{ fontSize: 'clamp(28px, 3.5vw, 40px)', fontWeight: 700, letterSpacing: '-0.02em', textAlign: 'center', margin: '0 0 12px', color: T.text }}>
+    <section style={{ padding: isMobile ? '64px 0' : '96px 0', borderTop: `1px solid ${T.borderSubtle}` }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '0 16px' : '0 24px' }}>
+        <h2 style={{ fontSize: isMobile ? 24 : 'clamp(28px, 3.5vw, 40px)', fontWeight: 700, letterSpacing: '-0.02em', textAlign: 'center', margin: '0 0 12px', color: T.text }}>
           Full request trace.
         </h2>
-        <p style={{ fontSize: 15, color: T.muted, textAlign: 'center', maxWidth: 520, margin: '0 auto 56px', lineHeight: 1.6 }}>
+        <p style={{ fontSize: isMobile ? 14 : 15, color: T.muted, textAlign: 'center', maxWidth: 520, margin: '0 auto 56px', lineHeight: 1.6 }}>
           Expand every step. See exactly what Bifrost did and why.
         </p>
-        <div style={{ maxWidth: 500, margin: '0 auto', background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, overflow: 'hidden' }}>
+        <div style={{ maxWidth: isMobile ? '100%' : 500, margin: '0 auto', background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, overflow: 'hidden' }}>
           {demoTrace.map((t, i) => (
             <div key={i} role="button" tabIndex={0}
               onClick={() => setExpanded(expanded === i ? null : i)}
@@ -784,16 +832,17 @@ function RequestTrace() {
 
 // ── What-If Simulator ───────────────────────────────────────────────────────
 function Simulator() {
+  const isMobile = useIsMobile();
   return (
-    <section style={{ padding: '96px 0', borderTop: `1px solid ${T.borderSubtle}` }}>
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px' }}>
-        <h2 style={{ fontSize: 'clamp(28px, 3.5vw, 40px)', fontWeight: 700, letterSpacing: '-0.02em', textAlign: 'center', margin: '0 0 12px', color: T.text }}>
+    <section style={{ padding: isMobile ? '64px 0' : '96px 0', borderTop: `1px solid ${T.borderSubtle}` }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '0 16px' : '0 24px' }}>
+        <h2 style={{ fontSize: isMobile ? 24 : 'clamp(28px, 3.5vw, 40px)', fontWeight: 700, letterSpacing: '-0.02em', textAlign: 'center', margin: '0 0 12px', color: T.text }}>
           Know what a routing change will cost before you ship it.
         </h2>
-        <p style={{ fontSize: 15, color: T.muted, textAlign: 'center', maxWidth: 520, margin: '0 auto 56px', lineHeight: 1.6 }}>
+        <p style={{ fontSize: isMobile ? 14 : 15, color: T.muted, textAlign: 'center', maxWidth: 520, margin: '0 auto 56px', lineHeight: 1.6 }}>
           Simulate policy changes and compare cost, latency, and provider distribution.
         </p>
-        <div style={{ maxWidth: 700, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+        <div style={{ maxWidth: 700, margin: '0 auto', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 16 }}>
           {[demoSimulator.current, demoSimulator.proposed].map((pol, i) => (
             <div key={i} style={{ background: T.card, border: `1px solid ${i === 1 ? `${T.accent}40` : T.border}`, borderRadius: 10, padding: 20 }}>
               <div style={{ fontSize: 12, fontFamily: T.mono, fontWeight: 600, color: i === 1 ? T.accent : T.muted, marginBottom: 16, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{pol.label}</div>
@@ -830,21 +879,22 @@ function Simulator() {
 // ── Final CTA ───────────────────────────────────────────────────────────────
 function FinalCTA() {
   const metrics = useRealtimeMetrics();
+  const isMobile = useIsMobile();
   return (
-    <section style={{ padding: '96px 0', borderTop: `1px solid ${T.borderSubtle}` }}>
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px', textAlign: 'center' }}>
-        <h2 style={{ fontSize: 'clamp(28px, 3.5vw, 44px)', fontWeight: 700, letterSpacing: '-0.02em', margin: '0 0 16px', color: T.text }}>
+    <section style={{ padding: isMobile ? '64px 0' : '96px 0', borderTop: `1px solid ${T.borderSubtle}` }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '0 16px' : '0 24px', textAlign: 'center' }}>
+        <h2 style={{ fontSize: isMobile ? 28 : 'clamp(28px, 3.5vw, 44px)', fontWeight: 700, letterSpacing: '-0.02em', margin: '0 0 16px', color: T.text }}>
           Build on one API.<br />Let Bifrost handle the rest.
         </h2>
-        <p style={{ fontSize: 15, color: T.muted, maxWidth: 480, margin: '0 auto 36px', lineHeight: 1.6 }}>
+        <p style={{ fontSize: isMobile ? 14 : 15, color: T.muted, maxWidth: 480, margin: '0 auto 36px', lineHeight: 1.6 }}>
           Connect your models once. Let Bifrost optimize routing, context, cost, reliability, and execution automatically.
         </p>
         <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-          <a href="/signup" style={{ padding: '11px 28px', background: T.text, color: T.bg, fontSize: 14, fontWeight: 600, textDecoration: 'none', borderRadius: 6, transition: 'opacity 0.15s' }}
+          <a href="/signup" style={{ padding: isMobile ? '10px 20px' : '11px 28px', background: T.text, color: T.bg, fontSize: isMobile ? 13 : 14, fontWeight: 600, textDecoration: 'none', borderRadius: 6, transition: 'opacity 0.15s' }}
             onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')} onMouseLeave={e => (e.currentTarget.style.opacity = '1')}>
             Start Building
           </a>
-          <a href="/docs" style={{ padding: '11px 28px', background: 'transparent', color: T.muted, fontSize: 14, border: `1px solid ${T.border}`, textDecoration: 'none', borderRadius: 6, transition: 'all 0.15s' }}
+          <a href="/docs" style={{ padding: isMobile ? '10px 20px' : '11px 28px', background: 'transparent', color: T.muted, fontSize: isMobile ? 13 : 14, border: `1px solid ${T.border}`, textDecoration: 'none', borderRadius: 6, transition: 'all 0.15s' }}
             onMouseEnter={e => { e.currentTarget.style.borderColor = T.dim; e.currentTarget.style.color = T.text; }}
             onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.muted; }}>
             Read the Docs
@@ -871,11 +921,12 @@ function FinalCTA() {
 
 // ── Footer ──────────────────────────────────────────────────────────────────
 function Footer() {
+  const isMobile = useIsMobile();
   const companyLinks = [
     { label: 'About', href: 'https://omixsystems.store' },
     { label: 'Blog', href: 'https://blog.omixsystems.store' },
     { label: 'Status', href: 'https://blog.omixsystems.store' },
-    { label: 'Contact', href: 'mailto:omixsystems@gmail.com' },
+    { label: 'Contact', href: '/contact' },
   ];
   const productLinks = [
     { label: 'Gateway', href: '#architecture' },
@@ -899,9 +950,9 @@ function Footer() {
   ];
 
   return (
-    <footer role="contentinfo" style={{ padding: '64px 0 40px', borderTop: `1px solid ${T.borderSubtle}` }}>
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr repeat(4, 1fr)', gap: 40, marginBottom: 48 }}>
+    <footer role="contentinfo" style={{ padding: isMobile ? '40px 0 24px' : '64px 0 40px', borderTop: `1px solid ${T.borderSubtle}` }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '0 16px' : '0 24px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '2fr repeat(4, 1fr)', gap: isMobile ? 32 : 40, marginBottom: isMobile ? 32 : 48 }}>
           <div>
             <div style={{ fontSize: 15, fontWeight: 800, color: T.text, fontFamily: T.mono, marginBottom: 8 }}>BIFROST</div>
             <div style={{ fontSize: 13, color: T.dim, lineHeight: 1.6 }}>The intelligent execution layer for AI.</div>
@@ -964,22 +1015,8 @@ export default function LandingPage() {
       <style>{`
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { background: ${T.bg}; color: ${T.text}; }
-        @media (max-width: 768px) {
-          .nav-links { display: none !important; }
-          .nav-actions a:first-child { display: none !important; }
-        }
-        @media (max-width: 640px) {
-          #architecture > div:last-child { grid-template-columns: 1fr !important; }
-        }
         @media (prefers-reduced-motion: reduce) {
           *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
-        }
-        @media (max-width: 768px) {
-          section > div > div[style*="grid-template-columns: repeat(3"] { grid-template-columns: 1fr !important; }
-          section > div > div[style*="grid-template-columns: 1fr 340px"] { grid-template-columns: 1fr !important; }
-          section > div > div[style*="grid-template-columns: 1fr 1fr"] { grid-template-columns: 1fr !important; }
-          section > div > div[style*="grid-template-columns: repeat(4"] { grid-template-columns: repeat(2, 1fr) !important; }
-          footer > div > div[style*="grid-template-columns: 2fr repeat(4"] { grid-template-columns: 1fr !important; }
         }
       `}</style>
       <Navbar />

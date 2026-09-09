@@ -87,7 +87,7 @@ function OverviewTab({ metrics }: { metrics: ReturnType<typeof useRealtimeMetric
 
   return (
     <div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1, background: t.borderSubtle, borderRadius: 8, overflow: 'hidden', marginBottom: 24 }}>
+      <div className="dash-metrics-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1, background: t.borderSubtle, borderRadius: 8, overflow: 'hidden', marginBottom: 24 }}>
         {cards.map((c, i) => (
           <div key={i} style={{ background: t.card, padding: '20px 16px' }}>
             <div style={{ fontSize: 28, fontWeight: 700, fontFamily: t.mono, color: c.color, letterSpacing: '-0.02em' }}>{c.value}</div>
@@ -133,7 +133,7 @@ function ActivityFeed() {
   }, []);
 
   return (
-    <div style={{ fontFamily: t.mono, fontSize: 12 }}>
+    <div style={{ fontFamily: t.mono, fontSize: 12 }} className="dash-activity-feed">
       {logs.map((l, i) => (
         <div key={l.id} style={{
           padding: '10px 16px', borderBottom: i < logs.length - 1 ? `1px solid ${t.borderSubtle}` : 'none',
@@ -211,10 +211,13 @@ function ProvidersTab() {
 
       {showAdd && (
         <div style={{ background: t.card, border: `1px solid ${t.border}`, borderRadius: 8, padding: 16, marginBottom: 16 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr 1fr', gap: 10, marginBottom: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr 1fr', gap: 10, marginBottom: 12 }} className="dash-overview-grid">
             <select value={form.provider} onChange={e => setForm(p => ({ ...p, provider: e.target.value }))}
               style={{ padding: '8px 10px', background: t.bg, border: `1px solid ${t.border}`, borderRadius: 4, color: t.text, fontSize: 12, fontFamily: t.mono, outline: 'none' }}>
-              {['openai','anthropic','gemini','groq','cerebras','sambanova','openrouter','cloudflare','mistral','huggingface','ollama-cloud','bytez','zen','ollama'].map(p => <option key={p} value={p}>{p}</option>)}
+              {['openai','anthropic','gemini','groq','cerebras','sambanova','openrouter','cloudflare','mistral','huggingface','ollama-cloud','bytez','zen','ollama',
+                'together','fireworks','deepinfra','novita','lepton','hyperbolic','cohere','ai21','nvidia','anyscale','deepseek','xai',
+                'qwen','zhipu','baidu','tencent','doubao','moonshot','01ai','minimax','featherless','mancer','nscale','bittensor','vercel-gateway'
+              ].map(p => <option key={p} value={p}>{p}</option>)}
             </select>
             <input value={form.api_key} onChange={e => setForm(p => ({ ...p, api_key: e.target.value }))} placeholder="sk-..." type="password"
               style={{ padding: '8px 10px', background: t.bg, border: `1px solid ${t.border}`, borderRadius: 4, color: t.text, fontSize: 12, fontFamily: t.mono, outline: 'none' }} />
@@ -234,11 +237,11 @@ function ProvidersTab() {
           <div style={{ padding: 32, textAlign: 'center', color: t.dim, fontSize: 12, fontFamily: t.mono }}>No provider keys configured. Add one to get started.</div>
         ) : (
           <div>
-            <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr 80px 70px 70px 90px', gap: 8, padding: '10px 16px', borderBottom: `1px solid ${t.borderSubtle}`, fontSize: 10, color: t.dim, fontFamily: t.mono, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+            <div className="dash-key-header" style={{ display: 'grid', gridTemplateColumns: '120px 1fr 80px 70px 70px 90px', gap: 8, padding: '10px 16px', borderBottom: `1px solid ${t.borderSubtle}`, fontSize: 10, color: t.dim, fontFamily: t.mono, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
               <span>Provider</span><span>Key</span><span>Label</span><span>Priority</span><span>Status</span><span>Actions</span>
             </div>
             {keys.map(k => (
-              <div key={k.id} style={{ display: 'grid', gridTemplateColumns: '120px 1fr 80px 70px 70px 90px', gap: 8, padding: '12px 16px', borderBottom: `1px solid ${t.borderSubtle}`, fontSize: 12, fontFamily: t.mono, alignItems: 'center' }}>
+              <div key={k.id} className="dash-key-row" style={{ display: 'grid', gridTemplateColumns: '120px 1fr 80px 70px 70px 90px', gap: 8, padding: '12px 16px', borderBottom: `1px solid ${t.borderSubtle}`, fontSize: 12, fontFamily: t.mono, alignItems: 'center' }}>
                 <span style={{ color: t.accent, fontWeight: 600 }}>{k.provider}</span>
                 <span style={{ color: t.dim }}>{k.api_key}</span>
                 <span style={{ color: t.muted }}>{k.label || '—'}</span>
@@ -339,11 +342,11 @@ function KeysTab() {
           <div style={{ padding: 32, textAlign: 'center', color: t.dim, fontSize: 12, fontFamily: t.mono }}>No gateway keys yet. Create one to start routing.</div>
         ) : (
           <div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 120px 100px 80px 100px', gap: 8, padding: '10px 16px', borderBottom: `1px solid ${t.borderSubtle}`, fontSize: 10, color: t.dim, fontFamily: t.mono, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+            <div className="dash-provider-header" style={{ display: 'grid', gridTemplateColumns: '1fr 120px 100px 80px 100px', gap: 8, padding: '10px 16px', borderBottom: `1px solid ${t.borderSubtle}`, fontSize: 10, color: t.dim, fontFamily: t.mono, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
               <span>Key</span><span>Name</span><span>Tier</span><span>Status</span><span>Actions</span>
             </div>
             {keys.map(k => (
-              <div key={k.id} style={{ display: 'grid', gridTemplateColumns: '1fr 120px 100px 80px 100px', gap: 8, padding: '12px 16px', borderBottom: `1px solid ${t.borderSubtle}`, fontSize: 12, fontFamily: t.mono, alignItems: 'center' }}>
+              <div key={k.id} className="dash-provider-row" style={{ display: 'grid', gridTemplateColumns: '1fr 120px 100px 80px 100px', gap: 8, padding: '12px 16px', borderBottom: `1px solid ${t.borderSubtle}`, fontSize: 12, fontFamily: t.mono, alignItems: 'center' }}>
                 <span style={{ color: t.muted }}>{k.key_prefix}</span>
                 <span style={{ color: t.text }}>{k.name}</span>
                 <span style={{ color: t.muted }}>{k.tier || 'default'}</span>
@@ -388,7 +391,7 @@ function ModelsTab() {
           <h3 style={{ fontSize: 16, fontWeight: 700, color: t.text, fontFamily: t.mono }}>Models</h3>
           <span style={{ fontSize: 12, color: t.dim, fontFamily: t.mono }}>{filtered.length} of {models.length} models</span>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div className="dash-search-row" style={{ display: 'flex', gap: 8 }}>
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search models..."
             style={{ padding: '6px 10px', background: t.bg, border: `1px solid ${t.border}`, borderRadius: 4, color: t.text, fontSize: 12, fontFamily: t.mono, outline: 'none', width: 180 }} />
           <select value={selectedProvider} onChange={e => setSelectedProvider(e.target.value)}
@@ -404,11 +407,11 @@ function ModelsTab() {
           <div style={{ padding: 32, textAlign: 'center', color: t.dim, fontSize: 12, fontFamily: t.mono }}>Loading models...</div>
         ) : (
           <div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 120px 100px 90px 90px', gap: 8, padding: '10px 16px', borderBottom: `1px solid ${t.borderSubtle}`, fontSize: 10, color: t.dim, fontFamily: t.mono, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+            <div className="dash-table-header" style={{ display: 'grid', gridTemplateColumns: '1fr 120px 100px 90px 90px', gap: 8, padding: '10px 16px', borderBottom: `1px solid ${t.borderSubtle}`, fontSize: 10, color: t.dim, fontFamily: t.mono, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
               <span>Model</span><span>Provider</span><span>Context</span><span>Input</span><span>Output</span>
             </div>
             {filtered.map(m => (
-              <div key={m.id} style={{ display: 'grid', gridTemplateColumns: '1fr 120px 100px 90px 90px', gap: 8, padding: '10px 16px', borderBottom: `1px solid ${t.borderSubtle}`, fontSize: 12, fontFamily: t.mono, alignItems: 'center' }}>
+              <div key={m.id} className="dash-table-row" style={{ display: 'grid', gridTemplateColumns: '1fr 120px 100px 90px 90px', gap: 8, padding: '10px 16px', borderBottom: `1px solid ${t.borderSubtle}`, fontSize: 12, fontFamily: t.mono, alignItems: 'center' }}>
                 <div>
                   <div style={{ color: t.text, fontWeight: 500 }}>{m.display_name || m.id}</div>
                   <div style={{ color: t.dim, fontSize: 10 }}>{m.id}</div>
@@ -521,7 +524,21 @@ export default function DashboardPage() {
 
   return (
     <div style={{ background: t.bg, color: t.text, fontFamily: t.font, minHeight: '100vh', WebkitFontSmoothing: 'antialiased' }}>
-      <style>{`* { margin: 0; padding: 0; box-sizing: border-box; } body { background: ${t.bg}; color: ${t.text}; }`}</style>
+      <style>{`
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: ${t.bg}; color: ${t.text}; }
+        @media (max-width: 768px) {
+          .dash-metrics-grid { grid-template-columns: 1fr 1fr !important; }
+          .dash-table-header, .dash-key-header, .dash-provider-header { display: none !important; }
+          .dash-table-row, .dash-key-row, .dash-provider-row { display: flex !important; flex-direction: column !important; gap: 6px !important; padding: 14px 16px !important; }
+          .dash-table-row > div:first-child { font-weight: 600 !important; }
+          .dash-search-row { flex-direction: column !important; }
+          .dash-search-row input, .dash-search-row select { width: 100% !important; }
+          .dash-tabs { overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; }
+          .dash-tabs button { white-space: nowrap !important; padding: 12px 14px !important; font-size: 11px !important; }
+          .dash-nav-stats { display: none !important; }
+        }
+      `}</style>
 
       {/* Nav */}
       <nav style={{
@@ -536,7 +553,7 @@ export default function DashboardPage() {
             <a href="/" style={{ fontSize: 14, fontWeight: 800, color: t.text, fontFamily: t.mono, textDecoration: 'none', letterSpacing: '-0.02em' }}>BIFROST</a>
             <span style={{ fontSize: 12, color: t.dim, fontFamily: t.mono, padding: '3px 8px', background: t.elevated, border: `1px solid ${t.border}`, borderRadius: 4 }}>Dashboard</span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          <div className="dash-nav-stats" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             <span style={{ fontSize: 11, color: t.dim, fontFamily: t.mono }}>{metrics.requestsPerMin} req/min</span>
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: t.accent, boxShadow: `0 0 6px ${t.accent}` }} />
             <button onClick={logout} style={{ padding: '5px 12px', background: 'transparent', border: `1px solid ${t.border}`, borderRadius: 4, color: t.muted, fontSize: 11, fontFamily: t.mono, cursor: 'pointer' }}>Logout</button>
@@ -545,7 +562,7 @@ export default function DashboardPage() {
       </nav>
 
       {/* Tabs */}
-      <div style={{ position: 'fixed', top: 56, left: 0, right: 0, zIndex: 90, background: 'rgba(9,9,11,0.92)', backdropFilter: 'blur(12px)', borderBottom: `1px solid ${t.borderSubtle}` }}>
+      <div className="dash-tabs" style={{ position: 'fixed', top: 56, left: 0, right: 0, zIndex: 90, background: 'rgba(9,9,11,0.92)', backdropFilter: 'blur(12px)', borderBottom: `1px solid ${t.borderSubtle}`, overflowX: 'auto' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px', display: 'flex', gap: 0 }}>
           {tabs.map(tb => (
             <button key={tb.id} onClick={() => setTab(tb.id)} style={{
@@ -567,6 +584,30 @@ export default function DashboardPage() {
         {tab === 'providers' && <ProvidersTab />}
         {tab === 'keys' && <KeysTab />}
       </main>
+      <style>{`
+        @media (max-width: 768px) {
+          .dash-metrics-grid { grid-template-columns: 1fr 1fr !important; }
+          .dash-table-header, .dash-table-row { grid-template-columns: 1fr !important; }
+          .dash-table-header { display: none !important; }
+          .dash-table-row { padding: 12px 16px !important; }
+          .dash-table-row > div { font-size: 12px !important; }
+          .dash-table-row > div:first-child { font-weight: 600 !important; color: #fafafa !important; }
+          .dash-key-header, .dash-key-row { grid-template-columns: 1fr !important; }
+          .dash-key-header { display: none !important; }
+          .dash-key-row { padding: 12px 16px !important; }
+          .dash-tabs { overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; }
+          .dash-tabs button { white-space: nowrap !important; padding: 12px 14px !important; font-size: 11px !important; }
+          .dash-provider-header, .dash-provider-row { grid-template-columns: 1fr !important; }
+          .dash-provider-header { display: none !important; }
+          .dash-provider-row > div { font-size: 12px !important; }
+          .dash-search-row { flex-direction: column !important; }
+          .dash-search-row input, .dash-search-row select { width: 100% !important; }
+          .dash-overview-grid { grid-template-columns: 1fr !important; }
+          .dash-overview-visual { grid-template-columns: 1fr !important; }
+          .dash-activity-feed { font-size: 11px !important; }
+          .dash-activity-feed span:first-child { min-width: 50px !important; }
+        }
+      `}</style>
     </div>
   );
 }

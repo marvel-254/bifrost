@@ -10,7 +10,12 @@
       "@bifrost/shared": ["../../packages/shared/src"],
       "@bifrost/models": ["../../packages/models/src"],
       "@bifrost/providers": ["../../packages/providers/src"],
-      "@bifrost/routing": ["../../packages/router/src"]
+      "@bifrost/routing": ["../../packages/router/src"],
+      "@bifrost/compression": ["../../packages/compression/src"],
+      "@bifrost/cache": ["../../packages/cache/src"],
+      "@bifrost/reliability": ["../../packages/reliability/src"],
+      "@bifrost/policy": ["../../packages/policy/src"],
+      "@bifrost/observability": ["../../packages/observability/src"]
     },
     "incremental": true
   },

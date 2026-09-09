@@ -10,8 +10,9 @@ import type { RoutingCandidate, ReliabilityConfig } from '../src/types';
 
 function makeCandidate(id: string, provider: string): RoutingCandidate {
   return {
-    model: { id, provider, displayName: id, contextWindow: 8192, capabilities: ['chat'], enabled: true },
+    model: { id, provider, displayName: id, contextWindow: 8192, capabilities: ['chat'], inputPrice: 0, outputPrice: 0, enabled: true },
     provider: { id: provider, name: provider, enabled: true },
+    capabilities: ['chat'],
     qualityScore: 1,
     costScore: 1,
     latencyScore: 1,

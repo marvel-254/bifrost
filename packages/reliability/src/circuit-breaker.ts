@@ -60,7 +60,7 @@ export class CircuitBreaker {
 
   private halfOpen(entry: CircuitBreakerEntry): void {
     entry.state = 'HALF_OPEN';
-    entry.lastProbeAt = Date.now();
+    entry.lastProbeAt = Date.now() - entry.config.probeFrequency;
   }
 
   private getThresholdForError(category: string, entry: CircuitBreakerEntry): number {

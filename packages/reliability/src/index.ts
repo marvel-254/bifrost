@@ -2,11 +2,11 @@ export { CircuitBreaker } from './circuit-breaker';
 export { ProviderCooldown } from './cooldown';
 export { AutoFallback } from './fallback';
 export { SelfHealing } from './self-healing';
-export { BackpressureEngine } from './backpressure';
+export { BackpressureEngine, type ReleaseFn } from './backpressure';
 export { StreamKeepalive } from './stream-keepalive';
 export { MultiAccountRotation } from './multi-account';
 export { PriorityQueue } from './priority-queue';
-export { ExecutionEngine } from './execution-engine';
+export { ExecutionEngine, type ExecutionRequest, type ExecutionOptions } from './execution-engine';
 
 export type {
   CircuitState,

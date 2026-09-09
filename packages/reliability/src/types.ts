@@ -84,35 +84,7 @@ export interface FallbackConfig {
   maxAttempts: number;
 }
 
-export interface RoutingCandidate {
-  model: {
-    id: string;
-    provider: string;
-    displayName: string;
-    contextWindow: number;
-    capabilities: string[];
-    inputPrice?: number;
-    outputPrice?: number;
-    enabled: boolean;
-  };
-  provider: {
-    id: string;
-    name: string;
-    enabled: boolean;
-    health?: {
-      healthy: boolean;
-      latencyMs: number;
-      successRate: number;
-    };
-  };
-  qualityScore: number;
-  costScore: number;
-  latencyScore: number;
-  reliabilityScore: number;
-  availabilityScore: number;
-  priority: number;
-  score?: number;
-}
+export type { RoutingCandidate } from '@bifrost/routing';
 
 // ── Self-Healing ──────────────────────────────────────────────────────────────
 
@@ -256,12 +228,12 @@ export interface QueuedRequest {
 // ── Execution Engine ──────────────────────────────────────────────────────────
 
 export interface ReliabilityConfig {
-  circuitBreaker: Partial<CircuitBreakerConfig>;
-  cooldown: Partial<CooldownConfig>;
-  fallback: Partial<FallbackConfig>;
-  selfHealing: Partial<HealthThresholds>;
-  backpressure: Partial<BackpressureConfig>;
-  streamKeepalive: Partial<StreamKeepaliveConfig>;
+  circuitBreaker?: Partial<CircuitBreakerConfig>;
+  cooldown?: Partial<CooldownConfig>;
+  fallback?: Partial<FallbackConfig>;
+  selfHealing?: Partial<HealthThresholds>;
+  backpressure?: Partial<BackpressureConfig>;
+  streamKeepalive?: Partial<StreamKeepaliveConfig>;
 }
 
 export interface ExecutionResult<T> {
